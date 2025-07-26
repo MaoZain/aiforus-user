@@ -1,0 +1,21 @@
+:root {
+  /* 可选：定义全局变量 */
+}
+
+.ant-descriptions-item-label,
+.ant-descriptions-item-content {
+  font-size: 16px !important;
+}
+
+.ant-badge {
+  font-size: 18px !important;
+}
+
+.ant-badge-status-text {
+  font-size: 18px !important;
+}
+
+.ant-badge-status-dot {
+  width: 14px !important;
+  height: 14px !important;
+}

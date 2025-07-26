@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # MySQL 数据库
+  mysql:
+    image: mysql:8.0
+    container_name: aiforus_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword123
+      MYSQL_DATABASE: aiforusdb
+      MYSQL_USER: aiforus
+      MYSQL_PASSWORD: pass1234
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - aiforus_network
+    command: --default-authentication-plugin=mysql_native_password
+
+  # 后端应用
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: aiforus_backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DB_HOST: mysql
+      DB_USER: aiforus
+      DB_PASSWORD: pass1234
+      DB_NAME: aiforusdb
+      JWT_SECRET: d7f3a1e9b5c42f8e92c5d1477b3e0a6f9b48c1d7a5e62f3b8c1d4f0a9e7b2c3d
+      STRIPE_SECRET_KEY: sk_test_51RaG9f4WpQmRUhQlyWun9aJysyn2E2xyE8gJuOfSRvUOQLMzkldQEBMj0aIwTMbDuCH32AEtyKbAstl8qbuoW4dq00sw3XK8jN
+    ports:
+      - "3001:3001"
+    depends_on:
+      - mysql
+    volumes:
+      - ./backend/logs:/app/logs
+    networks:
+      - aiforus_network
+
+  # 前端应用
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: aiforus_frontend
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - aiforus_network
+
+volumes:
+  mysql_data:
+
+networks:
+  aiforus_network:
+    driver: bridge
