@@ -26,7 +26,7 @@ export default defineConfig({
     open: true, // 自动打开浏览器
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:3001', // 后端服务地址
+        target: 'http://198.98.55.71:3001', // 后端服务地址 http://198.98.55.71:3001
         changeOrigin: true, // 支持跨域
         rewrite: (path) => path.replace(/^\/api/, 'api') // 去掉 /api 前缀
       }
