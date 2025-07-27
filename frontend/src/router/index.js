@@ -18,6 +18,11 @@ const routes = [
     meta: { guest: true }
   },
   {
+    path:'/',
+    component: () => import('@/views/home/App.vue'),
+    meta: { guest: true }
+  },
+  {
     path:'/orders',
     component: () => import('@/views/orders/App.vue'),
     meta: { guest: true }
