@@ -154,8 +154,29 @@
 </template>
 
 <script>
+import { useAuthStore } from '@/store/auth'
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+
 export default {
   name: "AIforUsHome",
+  setup() {
+    const authStore = useAuthStore()
+    const router = useRouter()
+    const isAuthenticated = computed(() => authStore.isAuthenticated)
+
+    const downloadApp = () => {
+      if (isAuthenticated.value) {
+        router.push('/dashboard') // 跳转到用户仪表板
+      } else {
+        router.push('/login') // 跳转到登录页面
+      }
+    }
+
+    return {
+      downloadApp
+    }
+  },
   mounted() {
     // Add smooth scrolling for navigation links
     const links = document.querySelectorAll('a[href^="#"]');
@@ -168,11 +189,6 @@ export default {
         }
       });
     });
-  },
-  methods: {
-    downloadApp() {
-      this.$router.push('/login') // 跳转到登录页面
-    }
   }
 };
 </script>
