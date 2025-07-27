@@ -1,5 +1,6 @@
 <template>
   <div class="header-container">
+    <img src="/logo.svg" alt="AIforUs" class="logo-icon" />
     <div class="logo">AIforUs</div>
     <nav class="nav-menu">
       <router-link to="/home" class="nav-item" exact>Home</router-link>
@@ -95,5 +96,11 @@ const logout = () => {
   text-decoration: underline;
   background: none;
   border: none;
+}
+
+.logo-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
 }
 </style>
