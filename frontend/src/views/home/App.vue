@@ -167,7 +167,7 @@ export default {
 
     const downloadApp = () => {
       if (isAuthenticated.value) {
-        router.push('/dashboard') // 跳转到用户仪表板
+        router.push('/dashboard/download') // 跳转到用户仪表板
       } else {
         router.push('/login') // 跳转到登录页面
       }
