@@ -50,12 +50,7 @@ export const registerUser = async (username, email, password, role) => {
   try {
     const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`
     
-    // 根据环境选择发送方式
-    if (process.env.NODE_ENV === 'development' && !process.env.SMTP_USER) {
-      await sendVerificationEmailDev(email, username, verificationUrl)
-    } else {
-      await sendVerificationEmail(email, username, verificationUrl)
-    }
+    await sendVerificationEmail(email, username, verificationUrl)
     
     console.log('User created successfully, verification email sent:', userId)
   } catch (emailError) {
