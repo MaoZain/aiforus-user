@@ -6,7 +6,7 @@ import setupInterceptors from './interceptors'
 // const API_BASE_URL = isProduction
 //   ? "http://127.0.0.1:3001/api" // Replace with your actual backend URL
 //   : "/api"; // Development uses Vite proxy
-const API_BASE_URL = "http://localhost:3001/api" // http://198.98.55.71/3001/api
+const API_BASE_URL = "http://198.98.55.71:3001/api" // http://198.98.55.71/3001/api
 
 // 创建 Axios 实例
 const axiosInstance = axios.create({
