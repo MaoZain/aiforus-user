@@ -15,11 +15,12 @@ export const useLicenseStore = defineStore('license',  {
       if (!response || !response.data) {
         throw new Error('Failed to fetch license data')
       }
-      const { licenseType, licenseStart, licenseExpire, licenseState } = response.data
+      const { licenseType, licenseStart, licenseExpire, licenseState, licenseCode } = response.data
       this.licenseType = licenseType
       this.licenseStart = licenseStart
       this.licenseExpire = licenseExpire
       this.licenseState = licenseState
+      this.licenseCode = licenseCode
     },
   },
 })

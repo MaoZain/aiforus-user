@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { createUser, findUserByEmail } from '../models/user.model.js'
 import { AppError } from '../utils/AppError.js'  // 确保导入 AppError
+import { generateTokenWithRSA } from '../utils/jwt.js'  // 确保导入 generateTokenWithRSA
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret'
 
@@ -18,7 +19,34 @@ export const registerUser = async (username,email, password, role) => {
   }
 
   const hashedPassword = await bcrypt.hash(password, 10)
-  const userId = await createUser(username, email, hashedPassword, role)
+  const user = {
+    username,
+    email,
+    password_hash: hashedPassword,
+    role: role || 'user', // 默认角色为'user'
+    licenseType: 'trial', // 默认许可类型
+    registrationDate: new Date(),
+    licenseStartDate: new Date(),
+    licenseExpirationDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 默认90天试用期
+    licenseState: 'active', // 默认许可状态为'active'
+  }
+  const userId = await createUser(user)
+  if (!userId) {
+    throw new AppError('Failed to create user', 500, 'USER_CREATION_FAILED')
+  }
+  console.log('User created successfully:', userId)
+  // 构建token载荷
+  const tokenPayload = {
+    email: email,
+    password: hashedPassword,
+    licenseType: user.licenseType || 'trial',
+    licenseExpirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 默认30天试用期
+    licenseState: user.licenseState || 'active',
+    role: user.role || 'user',
+    username: username,
+  };
+  //使用RSA私钥生成token
+  const licenseToken = generateTokenWithRSA(tokenPayload);
   return userId
 }
 

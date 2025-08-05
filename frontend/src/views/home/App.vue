@@ -16,7 +16,7 @@
           <button class="btn-primary" @click="downloadApp">Free Download</button>
           <button class="btn-secondary">Watch Demo</button>
         </div>
-        <p class="hero-note">Requires macOS 12.0 or later</p>
+        <!-- <p class="hero-note">Requires macOS 12.0 or later</p> -->
       </div>
       <div class="hero-visual">
         <div class="app-preview">

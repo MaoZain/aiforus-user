@@ -1,5 +1,5 @@
 import express from 'express'
-import { getAllUsers, getUserByEmail,updateProfileByEmail,getLicenseByEmail } from '../controllers/user.controller.js'
+import { getAllUsers, getUserByEmail,updateProfileByEmail,getLicenseByEmail,updateLicenseCode } from '../controllers/user.controller.js'
 
 const router = express.Router()
 
@@ -102,5 +102,7 @@ router.get('/profile/:email', getUserByEmail)
 router.get('/licenseInfo/:email', getLicenseByEmail)
 
 router.post('/updateProfile/', updateProfileByEmail)
+
+router.post('/updateLicenseCode/', updateLicenseCode)
 
 export default router

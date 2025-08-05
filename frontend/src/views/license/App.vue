@@ -17,13 +17,38 @@
         <a-descriptions-item label="Expiry Date" :span="1">
           {{ formatDate(licenseExpire) }}
         </a-descriptions-item>
-        <a-descriptions-item label="Status">
-          {{licenseState}}
-          <!-- <a-badge :status="license.status === 'Active' ? 'success' : 'default'" :text="license.status" /> -->
+        <a-descriptions-item label="Status" :span="2">
+          <a-badge :status="licenseState === 'active' ? 'success' : 'default'" :text="licenseState" />
         </a-descriptions-item>
-        <!-- <a-descriptions-item label="License Code" :span="3">
-          <span class="license-code">{{ license.code }}</span>
-        </a-descriptions-item> -->
+        <a-descriptions-item label="License Code" :span="3">
+          <div class="license-code-wrapper">
+            <span 
+              class="license-code" 
+              @click="copyLicenseCode"
+              :title="licenseCode"
+            >
+              {{ truncatedLicenseCode }}
+            </span>
+            <a-button 
+              type="link" 
+              size="small" 
+              @click="copyLicenseCode"
+              :icon="copyIcon"
+              class="copy-btn"
+            >
+              Copy
+            </a-button>
+            <a-button 
+              type="link" 
+              size="small" 
+              @click="updateLicenseCode"
+              :loading="updating"
+              class="update-btn"
+            >
+              Update
+            </a-button>
+          </div>
+        </a-descriptions-item>
       </a-descriptions>
     </template>
     <template v-else>
@@ -103,22 +128,76 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, h } from "vue";
 import { useLicenseStore } from "@/store/license";
 import { useAuthStore } from "@/store/auth";
 import { postAction } from "@/services/api";
-import { message } from "ant-design-vue"
+import { message } from "ant-design-vue";
+import { CopyOutlined, CheckOutlined } from '@ant-design/icons-vue';
 
 const licenseStore = useLicenseStore();
 const authStore = useAuthStore();
 
-
 const showModal = ref(false);
 const upgradeType = ref("Trial");
+const updating = ref(false);
+const copyIcon = ref(h(CopyOutlined));
+
 const licenseType = computed(() => licenseStore.licenseType);
 const licenseStart = computed(() => licenseStore.licenseStart);
 const licenseExpire = computed(() => licenseStore.licenseExpire);
 const licenseState = computed(() => licenseStore.licenseState);
+const licenseCode = computed(() => licenseStore.licenseCode);
+
+// 截断显示的许可证代码
+const truncatedLicenseCode = computed(() => {
+  if (!licenseCode.value) return '';
+  const code = licenseCode.value;
+  if (code.length <= 20) return code;
+  return `${code.substring(0, 10)}...${code.substring(code.length - 10)}`;
+});
+
+// 复制许可证代码
+const copyLicenseCode = async () => {
+  try {
+    await navigator.clipboard.writeText(licenseCode.value);
+    copyIcon.value = h(CheckOutlined);
+    message.success('License code copied to clipboard!');
+    
+    // 2秒后恢复复制图标
+    setTimeout(() => {
+      copyIcon.value = h(CopyOutlined);
+    }, 2000);
+  } catch (error) {
+    console.error('Failed to copy:', error);
+    message.error('Failed to copy license code');
+  }
+};
+
+// 更新许可证代码
+const updateLicenseCode = async () => {
+  try {
+    updating.value = true;
+    
+    // 调用API更新许可证代码
+    const response = await postAction("/users/updateLicenseCode", {
+      email: authStore.useremail
+    });
+    
+    if (response.success) {
+      // 更新store中的许可证信息
+      await licenseStore.getLicense(authStore.useremail);
+      message.success('License code updated successfully!');
+    } else {
+      throw new Error(response.message || 'Failed to update license code');
+    }
+  } catch (error) {
+    console.error('Update license code error:', error);
+    message.error('Failed to update license code');
+  } finally {
+    updating.value = false;
+  }
+};
 
 async function handleUpgrade() {
   try {
@@ -134,14 +213,6 @@ async function handleUpgrade() {
       successUrl: `${window.location.origin}/payment-success`,
       cancelUrl: `${window.location.origin}/payment-cancel`,
     };
-    
-    // 对于免费试用版，直接更新许可证
-    // if (upgradeType.value === 'Trial') {
-    //   licenseStore.getLicense();
-    //   showModal.value = false;
-    //   message.success({ content: 'Trial license activated successfully!', key: loadingKey });
-    //   return;
-    // }
     
     // 对于付费版本，创建 Stripe 结账会话
     const response = await postAction("/payment/create-checkout-session", params);
@@ -239,16 +310,55 @@ const formatDate = (dateString) => {
   font-weight: 500;
 }
 
-/* 许可证代码样式 */
+/* 许可证代码样式更新 */
+.license-code-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .license-code {
   font-family: 'Courier New', monospace;
   background-color: #f7f7f7;
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: 6px 12px;
+  border-radius: 6px;
   font-size: 14px;
   letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid #e1e1e1;
+  min-width: 200px;
+  user-select: none;
 }
 
+.license-code:hover {
+  background-color: #e6f7ff;
+  border-color: #91d5ff;
+  transform: translateY(-1px);
+}
+
+.copy-btn, .update-btn {
+  padding: 0 8px;
+  height: 28px;
+  font-size: 12px;
+}
+
+.copy-btn {
+  color: #1890ff;
+}
+
+.copy-btn:hover {
+  color: #40a9ff;
+}
+
+.update-btn {
+  color: #52c41a;
+}
+
+.update-btn:hover {
+  color: #73d13d;
+}
 
 /* 定价卡片改进 */
 .pricing-modal {
@@ -344,5 +454,17 @@ const formatDate = (dateString) => {
 
 .active-link:hover {
   color: #40a9ff;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .license-code-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .license-code {
+    min-width: 100%;
+  }
 }
 </style>

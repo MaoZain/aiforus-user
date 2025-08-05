@@ -6,7 +6,7 @@
       <router-link to="/home" class="nav-item" exact>Home</router-link>
       <router-link  v-if="isAuthenticated" :to=" userRole==='admin'? '/dashboard/admin':'/dashboard'" class="nav-item">Dashboard</router-link>
       <!-- <router-link v-if="userRole!=='admin'" to="/orders" class="nav-item">My Orders</router-link> -->
-      <router-link to="/tutorials" class="nav-item">Tutorials</router-link>
+      <!-- <router-link to="/tutorials" class="nav-item">Tutorials</router-link> -->
     </nav>
     <div class="header-actions">
       <span class="username">{{ username }}</span>

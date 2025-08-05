@@ -58,9 +58,9 @@
 
                     <a-card title="System Requirements" class="system-requirements">
                       <a-list size="small">
-                        <a-list-item>macOS 10.15 or later</a-list-item>
-                        <a-list-item>4GB RAM or more</a-list-item>
-                        <a-list-item>1GB available disk space</a-list-item>
+                        <a-list-item>macOS</a-list-item>
+                        <!-- <a-list-item>4GB RAM or more</a-list-item> -->
+                        <a-list-item>4GB available disk space</a-list-item>
                       </a-list>
                     </a-card>
                   </a-col>
@@ -172,13 +172,13 @@ const selectedPlatform = ref("mac");
 
 // macOS version info
 const macVersion = ref("1.0.0");
-const macFileSize = ref("70MB");
-const macUpdateDate = ref("June 28, 2025");
+const macFileSize = ref("3.3GB");
+const macUpdateDate = ref("August 01, 2025");
 
 // Windows version info
 const windowsVersion = ref("1.0.0");
-const windowsFileSize = ref("75MB");
-const windowsUpdateDate = ref("June 28, 2025");
+const windowsFileSize = ref("3.3GB");
+const windowsUpdateDate = ref("August 01, 2025");
 
 function trackDownload(platform) {
   // Add download tracking logic here

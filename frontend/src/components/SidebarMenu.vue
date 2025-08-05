@@ -8,10 +8,10 @@
       <template #icon><safety-certificate-outlined style="font-size: 16px;"/></template>
       <router-link to="/dashboard/license">License</router-link>
     </a-menu-item>
-    <a-menu-item v-if="role === 'user'" key="coupon">
+    <!-- <a-menu-item v-if="role === 'user'" key="coupon">
       <template #icon><gift-outlined style="font-size: 16px;"/></template>
       <router-link to="/dashboard/coupon">Coupon</router-link>
-    </a-menu-item>
+    </a-menu-item> -->
 
     <a-menu-item v-if="role === 'admin'" key="management">
       <template #icon><setting-outlined style="font-size: 16px;"/></template>

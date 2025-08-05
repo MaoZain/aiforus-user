@@ -4,7 +4,7 @@
       <!-- 左侧登录表单 -->
       <div class="login-form-section">
         <div class="center-header">
-          <div class="logo">AIforUs</div>
+         
           <h2>Welcome</h2>
         </div>
 
@@ -51,7 +51,11 @@
       <!-- 右侧插画图 -->
       <div class="login-image-section">
         <div class="image-container">
-          <img src="@/assets/login.jpg" alt="Login Illustration" />
+          <div class="logo-wrapper">
+            <img src="@/assets/logo.svg" alt="Login Illustration" class="logo-image" />
+            <div class="logo-title">AIforUs</div>
+            <div class="logo-subtitle">Your AI Partner for Success</div>
+          </div>
         </div>
       </div>
     </div>
@@ -247,8 +251,9 @@ const signUp = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   position: relative;
+  padding: 40px;
 }
 
 .image-container {
@@ -257,14 +262,68 @@ const signUp = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-.login-image-section img {
-  max-width: 85%;
-  max-height: 85%;
+.logo-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 24px;
+}
+
+.logo-image {
+  width: 200px;
+  height: 200px;
   object-fit: contain;
-  border-radius: 12px;
+  /* filter: brightness(0) invert(1); 将logo变为白色 */
+  transition: all 0.3s ease;
+}
+
+.logo-image:hover {
+  transform: scale(1.5);
+  /* filter: brightness(0) invert(1) drop-shadow(0 0 20px rgba(255, 255, 255, 0.3)); */
+}
+
+.logo-title {
+  font-size: 36px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.logo-title:hover {
+  transform: translateY(-2px);
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.logo-subtitle {
+  font-size: 16px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+  letter-spacing: 0.5px;
+  opacity: 0.9;
+}
+
+/* 添加动画效果 */
+.logo-wrapper {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* 响应式设计 */
@@ -287,4 +346,55 @@ const signUp = () => {
     padding: 40px 30px;
   }
 }
+
+@media (max-width: 768px) {
+  .login-image-section {
+    padding: 30px 20px;
+    min-height: 250px;
+  }
+  
+  .logo-wrapper {
+    gap: 16px;
+  }
+  
+  .logo-image {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .logo-title {
+    font-size: 28px;
+  }
+  
+  .logo-subtitle {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-image {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .logo-title {
+    font-size: 24px;
+  }
+  
+  .logo-subtitle {
+    font-size: 12px;
+  }
+}
+
+/* 为深色logo添加备选方案 */
+@media (prefers-color-scheme: dark) {
+  .logo-image {
+    /* filter: brightness(0) invert(1); */
+  }
+}
+
+/* 如果logo本身是白色或透明背景，移除filter */
+/* .logo-image {
+  filter: none;
+} */
 </style>

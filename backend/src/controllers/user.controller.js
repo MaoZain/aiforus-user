@@ -3,6 +3,8 @@ import { getUsersFromDB, registerUser, loginUser, getUserInfoByEmail, updateUser
 import { AppError } from '../utils/AppError.js'
 import { asyncHandler } from '../middlewares/asyncHandler.js'
 import { findUserByEmail } from '../models/user.model.js'
+import { generateTokenWithRSA } from '../utils/jwt.js'  // 确保导入 generateTokenWithRSA
+
 
 
 // 获取所有用户
@@ -41,6 +43,7 @@ export const getLicenseByEmail = asyncHandler(async (req, res) => {
     licenseStart: userInfo.license_start_date || null,
     licenseExpire: userInfo.license_expiration_date || null,
     licenseState: userInfo.license_state || null,
+    licenseCode: userInfo.license_token || null,
   }
   
   res.success(license, 'license information fetched successfully')
@@ -81,4 +84,32 @@ export const login = asyncHandler(async (req, res) => {
   res.success({ token, role, username, email }, 'Login successful')
 })
 
-
+// update license code
+export const updateLicenseCode = asyncHandler(async (req, res) => {
+  const { email } = req.body
+  console.log('Updating license code for:', email);
+  const user = await findUserByEmail(email)
+  if (!user) {
+    throw new AppError('User not found', 404, 'USER_NOT_FOUND')
+  }
+  console.log(user);
+  let expiration = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 默认30天试用期
+  if(expiration > new Date(user.license_expiration_date).getTime()) {
+    expiration = new Date(user.license_expiration_date) // 如果传入的许可过期时间更早，则使用它
+  }
+  console.log(expiration);
+  expiration = new Date(user.license_expiration_date) 
+  const tokenPayload = {
+    email: user.email,
+    password: user.password_hash, // 注意：这里使用的是密码哈希值，实际应用中请确保安全性
+    licenseStartDate: user.license_start_date,
+    licenseType: user.license_type,
+    licenseExpirationDate: expiration,
+    licenseState: user.license_state,
+    role: user.role || 'user',
+    username: user.user_name,
+  };
+  //使用RSA私钥生成token
+  const licenseToken = generateTokenWithRSA(tokenPayload);
+  res.success(licenseToken, 'License code updated successfully')
+})
