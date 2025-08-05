@@ -11,7 +11,7 @@
  Target Server Version : 80100 (8.1.0)
  File Encoding         : 65001
 
- Date: 26/07/2025 21:52:06
+ Date: 05/08/2025 22:35:44
 */
 
 SET NAMES utf8mb4;
@@ -126,18 +126,22 @@ CREATE TABLE `users` (
   `occupation` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `education` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `age_range` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `license_token` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
+  `emailVerified` tinyint(1) DEFAULT '0',
+  `verificationToken` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `verificationTokenExpires` datetime DEFAULT NULL,
   PRIMARY KEY (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ----------------------------
 -- Records of users
 -- ----------------------------
 BEGIN;
-INSERT INTO `users` (`user_id`, `user_name`, `role`, `first_name`, `last_name`, `email`, `password_hash`, `auth_provider`, `license_type`, `license_start_date`, `license_expiration_date`, `registration_date`, `license_state`, `notes`, `occupation`, `education`, `age_range`) VALUES (1, 'test1', 'user', 'Alice', 'Wang', 'alice@example.com', '123456', 'email', 'gold', '2025-01-01', '2025-12-31', '2025-06-28 16:56:52', 'active', 'VIP user', 'SOFTWARE_ENGINEER', 'EDU_MASTER', 'AGE_25_34');
-INSERT INTO `users` (`user_id`, `user_name`, `role`, `first_name`, `last_name`, `email`, `password_hash`, `auth_provider`, `license_type`, `license_start_date`, `license_expiration_date`, `registration_date`, `license_state`, `notes`, `occupation`, `education`, `age_range`) VALUES (2, 'test2', 'user', 'Bob', 'Li', 'bob@example.com', '123456', 'google', 'silver', '2025-02-01', '2025-11-30', '2025-06-28 16:56:52', 'active', 'Regular user', 'SOFTWARE_ENGINEER', 'EDU_MASTER', 'AGE_25_34');
-INSERT INTO `users` (`user_id`, `user_name`, `role`, `first_name`, `last_name`, `email`, `password_hash`, `auth_provider`, `license_type`, `license_start_date`, `license_expiration_date`, `registration_date`, `license_state`, `notes`, `occupation`, `education`, `age_range`) VALUES (3, 'test3', 'user', 'Charlie', 'Zhao', 'charlie@example.com', '123456', 'facebook', 'trial', '2025-03-01', '2025-06-30', '2025-06-28 16:56:52', 'expired', 'Trial user', 'SOFTWARE_ENGINEER', 'EDU_MASTER', 'AGE_25_34');
-INSERT INTO `users` (`user_id`, `user_name`, `role`, `first_name`, `last_name`, `email`, `password_hash`, `auth_provider`, `license_type`, `license_start_date`, `license_expiration_date`, `registration_date`, `license_state`, `notes`, `occupation`, `education`, `age_range`) VALUES (4, 'admin', 'admin', 'ziting', 'mao', 'admin@qq.com', '$2b$10$4qmOnnk2oZCWQl7dCI54ku7dAwPCeuEB1QeAI0nOdXQEM9lwoLIj.', 'email', 'trial', NULL, NULL, '2025-06-28 16:57:21', 'none', 'notes', 'SOFTWARE_ENGINEER', 'EDU_MASTER', 'AGE_25_34');
-INSERT INTO `users` (`user_id`, `user_name`, `role`, `first_name`, `last_name`, `email`, `password_hash`, `auth_provider`, `license_type`, `license_start_date`, `license_expiration_date`, `registration_date`, `license_state`, `notes`, `occupation`, `education`, `age_range`) VALUES (5, 'userzt', 'user', 'shuai', 'Zeng', 'test@qq.com', '$2b$10$jddOUmjFR75K1Vn0ABIS3uPAbnxMYmXZgEzTWJPX1LK5u/1syq7wK', 'email', 'silver', '2025-03-01', '2025-11-30', '2025-06-28 17:27:11', 'active', NULL, 'DATA_SCIENTIST', 'EDU_BACHELOR', 'AGE_25_34');
+INSERT INTO `users` (`user_id`, `user_name`, `role`, `first_name`, `last_name`, `email`, `password_hash`, `auth_provider`, `license_type`, `license_start_date`, `license_expiration_date`, `registration_date`, `license_state`, `notes`, `occupation`, `education`, `age_range`, `license_token`, `emailVerified`, `verificationToken`, `verificationTokenExpires`) VALUES (1, 'test1', 'user', 'Alice', 'Wang', 'alice@example.com', '123456', 'email', 'gold', '2025-01-01', '2025-12-31', '2025-06-28 16:56:52', 'active', 'VIP user', 'SOFTWARE_ENGINEER', 'EDU_MASTER', 'AGE_25_34', NULL, 0, NULL, NULL);
+INSERT INTO `users` (`user_id`, `user_name`, `role`, `first_name`, `last_name`, `email`, `password_hash`, `auth_provider`, `license_type`, `license_start_date`, `license_expiration_date`, `registration_date`, `license_state`, `notes`, `occupation`, `education`, `age_range`, `license_token`, `emailVerified`, `verificationToken`, `verificationTokenExpires`) VALUES (2, 'test2', 'user', 'Bob', 'Li', 'bob@example.com', '123456', 'google', 'silver', '2025-02-01', '2025-11-30', '2025-06-28 16:56:52', 'active', 'Regular user', 'SOFTWARE_ENGINEER', 'EDU_MASTER', 'AGE_25_34', NULL, 0, NULL, NULL);
+INSERT INTO `users` (`user_id`, `user_name`, `role`, `first_name`, `last_name`, `email`, `password_hash`, `auth_provider`, `license_type`, `license_start_date`, `license_expiration_date`, `registration_date`, `license_state`, `notes`, `occupation`, `education`, `age_range`, `license_token`, `emailVerified`, `verificationToken`, `verificationTokenExpires`) VALUES (3, 'test3', 'user', 'Charlie', 'Zhao', 'charlie@example.com', '123456', 'facebook', 'trial', '2025-03-01', '2025-06-30', '2025-06-28 16:56:52', 'expired', 'Trial user', 'SOFTWARE_ENGINEER', 'EDU_MASTER', 'AGE_25_34', NULL, 0, NULL, NULL);
+INSERT INTO `users` (`user_id`, `user_name`, `role`, `first_name`, `last_name`, `email`, `password_hash`, `auth_provider`, `license_type`, `license_start_date`, `license_expiration_date`, `registration_date`, `license_state`, `notes`, `occupation`, `education`, `age_range`, `license_token`, `emailVerified`, `verificationToken`, `verificationTokenExpires`) VALUES (4, 'admin', 'admin', 'ziting', 'mao', 'admin@qq.com', '$2b$10$4qmOnnk2oZCWQl7dCI54ku7dAwPCeuEB1QeAI0nOdXQEM9lwoLIj.', 'email', 'trial', NULL, NULL, '2025-06-28 16:57:21', 'none', 'notes', 'SOFTWARE_ENGINEER', 'EDU_MASTER', 'AGE_25_34', NULL, 0, NULL, NULL);
+INSERT INTO `users` (`user_id`, `user_name`, `role`, `first_name`, `last_name`, `email`, `password_hash`, `auth_provider`, `license_type`, `license_start_date`, `license_expiration_date`, `registration_date`, `license_state`, `notes`, `occupation`, `education`, `age_range`, `license_token`, `emailVerified`, `verificationToken`, `verificationTokenExpires`) VALUES (5, 'userzt', 'user', 'shuai', 'Zeng', 'test@qq.com', '$2b$10$jddOUmjFR75K1Vn0ABIS3uPAbnxMYmXZgEzTWJPX1LK5u/1syq7wK', 'email', 'silver', '2025-03-01', '2025-11-30', '2025-06-28 17:27:11', 'active', NULL, 'DATA_SCIENTIST', 'EDU_BACHELOR', 'AGE_25_34', NULL, 0, NULL, NULL);
 COMMIT;
 
 SET FOREIGN_KEY_CHECKS = 1;
