@@ -4,7 +4,7 @@ export const createUser = async (user) => {
   try
   {
     const [result] = await pool.query(
-      "INSERT INTO users (user_name, email, password_hash, role, license_type, registration_date, license_start_date, license_expiration_date, license_state) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO users (user_name, email, password_hash, role, license_type, registration_date, license_start_date, license_expiration_date, license_state, verificationToken, verificationTokenExpires) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)",
       [
         user.username,
         user.email,
@@ -15,6 +15,8 @@ export const createUser = async (user) => {
         user.licenseStartDate,
         user.licenseExpirationDate,
         user.licenseState,
+        user.verificationToken,
+        user.verificationTokenExpires,
       ]
     );
     return result.insertId;

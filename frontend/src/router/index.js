@@ -1,88 +1,89 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import { useAuthStore } from '@/store/auth'
-import Login from '@/views/login/App.vue'
-import Register from '@/views/register/App.vue'
-import DefaultLayout from '@/layout/Default.vue'
-import PaymentSuccess from '@/views/payment/PaymentSuccess.vue';
-import PaymentCancel from '@/views/payment/PaymentCancel.vue';
+import { createRouter, createWebHistory } from "vue-router";
+import { useAuthStore } from "@/store/auth";
+import Login from "@/views/login/App.vue";
+import Register from "@/views/register/App.vue";
+import DefaultLayout from "@/layout/Default.vue";
+import PaymentSuccess from "@/views/payment/PaymentSuccess.vue";
+import PaymentCancel from "@/views/payment/PaymentCancel.vue";
 
 const routes = [
+  { path: "/verify-email", name: "VerifyEmail", component: () => import("@/views/components/verifyEmail.vue") }, // 新增验证邮箱路由
   {
-    path:'/404',
-    component: () => import('@/views/404.vue'),
-    meta: { guest: true }
+    path: "/404",
+    component: () => import("@/views/404.vue"),
+    meta: { guest: true },
   },
   {
-    path:'/home',
-    component: () => import('@/views/home/App.vue'),
-    meta: { guest: true }
+    path: "/home",
+    component: () => import("@/views/home/App.vue"),
+    meta: { guest: true },
   },
   {
-    path:'/',
-    component: () => import('@/views/home/App.vue'),
-    meta: { guest: true }
+    path: "/",
+    component: () => import("@/views/home/App.vue"),
+    meta: { guest: true },
   },
   {
-    path:'/orders',
-    component: () => import('@/views/orders/App.vue'),
-    meta: { guest: true }
+    path: "/orders",
+    component: () => import("@/views/orders/App.vue"),
+    meta: { guest: true },
   },
   {
-    path:'/tutorials',
-    component: () => import('@/views/tutorials/App.vue'),
-    meta: { guest: true }
+    path: "/tutorials",
+    component: () => import("@/views/tutorials/App.vue"),
+    meta: { guest: true },
   },
   {
-    path: '/login',
+    path: "/login",
     component: Login,
-    meta: { guest: true }
+    meta: { guest: true },
   },
   {
-    path: '/register',
+    path: "/register",
     component: Register,
-    meta: { guest: true }
+    meta: { guest: true },
   },
   {
-    path: '/dashboard',
+    path: "/dashboard",
     component: DefaultLayout,
-    meta: { role: 'user' },
+    meta: { role: "user" },
     children: [
-      { path: '', component: () => import('@/views/profile/App.vue') },
-      { path: 'license', component: () => import('@/views/license/App.vue') },
-      { path: 'coupon', component: () => import('@/views/coupon/App.vue') },
-      { path: 'download', component: () => import('@/views/download/App.vue') },
-    ]
+      { path: "", component: () => import("@/views/profile/App.vue") },
+      { path: "license", component: () => import("@/views/license/App.vue") },
+      { path: "coupon", component: () => import("@/views/coupon/App.vue") },
+      { path: "download", component: () => import("@/views/download/App.vue") },
+    ],
   },
   // admin
   {
-    path: '/dashboard/admin',
+    path: "/dashboard/admin",
     component: DefaultLayout,
-    meta: { role: 'admin' },
+    meta: { role: "admin" },
     children: [
-      { path: '', component: () => import('@/views/userManagement/App.vue') },
-      { path: 'download', component: () => import('@/views/download/App.vue') },
-    ]
+      { path: "", component: () => import("@/views/userManagement/App.vue") },
+      { path: "download", component: () => import("@/views/download/App.vue") },
+    ],
   },
   {
-    path: '/payment-success',
-    name: 'PaymentSuccess',
+    path: "/payment-success",
+    name: "PaymentSuccess",
     component: PaymentSuccess,
   },
   {
-    path: '/payment-cancel',
-    name: 'PaymentCancel',
+    path: "/payment-cancel",
+    name: "PaymentCancel",
     component: PaymentCancel,
-  }
-]
+  },
+];
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
-})
+  routes,
+});
 
 // 路由守卫：控制访问权限
 router.beforeEach((to, from, next) => {
-  const store = useAuthStore()
+  const store = useAuthStore();
   console.log(store);
 
   // if ( !store.authToken ) {
@@ -91,14 +92,14 @@ router.beforeEach((to, from, next) => {
   // }
 
   if (to.meta.role && store.userRole !== to.meta.role) {
-    return next('/404') // 或跳转 403 页面
+    return next("/404"); // 或跳转 403 页面
   }
 
   // if (to.meta.guest && store.authToken) {
   //   return next('/') // 登录用户不能访问登录/注册页
   // }
 
-  next()
-})
+  next();
+});
 
-export default router
+export default router;

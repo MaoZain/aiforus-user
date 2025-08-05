@@ -1,5 +1,5 @@
 import express from 'express'
-import { getAllUsers, getUserByEmail,updateProfileByEmail,getLicenseByEmail,updateLicenseCode } from '../controllers/user.controller.js'
+import { getAllUsers, getUserByEmail,updateProfileByEmail,getLicenseByEmail,updateLicenseCode,verifyEmailToken,resendVerificationEmailToken} from '../controllers/user.controller.js'
 
 const router = express.Router()
 
@@ -104,5 +104,8 @@ router.get('/licenseInfo/:email', getLicenseByEmail)
 router.post('/updateProfile/', updateProfileByEmail)
 
 router.post('/updateLicenseCode/', updateLicenseCode)
+
+router.post('/verifyEmailToken/', verifyEmailToken)
+router.post('/resendVerificationEmailToken/', resendVerificationEmailToken)
 
 export default router

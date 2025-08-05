@@ -1,5 +1,5 @@
 // controllers/user.controller.js
-import { getUsersFromDB, registerUser, loginUser, getUserInfoByEmail, updateUserInfoByEmail } from '../services/user.service.js'
+import { getUsersFromDB, registerUser, loginUser, getUserInfoByEmail, updateUserInfoByEmail,verifyEmail,resendVerificationEmail } from '../services/user.service.js'
 import { AppError } from '../utils/AppError.js'
 import { asyncHandler } from '../middlewares/asyncHandler.js'
 import { findUserByEmail } from '../models/user.model.js'
@@ -112,4 +112,30 @@ export const updateLicenseCode = asyncHandler(async (req, res) => {
   //使用RSA私钥生成token
   const licenseToken = generateTokenWithRSA(tokenPayload);
   res.success(licenseToken, 'License code updated successfully')
+})
+
+export const verifyEmailToken = asyncHandler(async (req, res) => {
+  const { token } = req.body
+
+  if (!token) {
+    throw new AppError('No token provided', 400, 'TOKEN_REQUIRED')
+  } 
+  try {
+    const result = await verifyEmail(token)
+    res.success(result, 'Email verified successfully')
+  } catch (error) {
+    throw new AppError(error.message, error.statusCode || 500, error.code || 'EMAIL_VERIFICATION_FAILED')
+  }
+})
+
+// 重发验证邮件
+export const resendVerificationEmailToken = asyncHandler(async (req, res) => {
+  const { email } = req.body
+
+  if (!email) {
+    throw new AppError('Email is required', 400, 'EMAIL_REQUIRED')
+  }
+
+  const result = await resendVerificationEmail(email)
+  res.success(result, 'Verification email resent successfully')
 })

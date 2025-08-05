@@ -5,7 +5,7 @@
         <template #title>
           <div class="desc-title-row">
             <span>License Info</span>
-            <a-button type="primary" class="upgrade-btn" @click="showModal = true">Upgrade</a-button>
+            <a-button :disabled="licenseState === 'suspended'" type="primary" class="upgrade-btn" @click="showModal = true">Upgrade</a-button>
           </div>
         </template>
         <a-descriptions-item label="License Type" :span="2">
@@ -35,6 +35,7 @@
               @click="copyLicenseCode"
               :icon="copyIcon"
               class="copy-btn"
+              :disabled="licenseState === 'suspended'"
             >
               Copy
             </a-button>
@@ -44,6 +45,7 @@
               @click="updateLicenseCode"
               :loading="updating"
               class="update-btn"
+              :disabled="licenseState === 'suspended'"
             >
               Update
             </a-button>

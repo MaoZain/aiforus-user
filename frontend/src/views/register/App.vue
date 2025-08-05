@@ -4,7 +4,6 @@
       <!-- 左侧注册表单 -->
       <div class="register-form-section">
         <div class="center-header">
-          <div class="logo">AIforUs</div>
           <h2>Create your account</h2>
         </div>
 
@@ -66,9 +65,13 @@
       </div>
 
       <!-- 右侧插图 -->
-      <div class="register-image-section">
+      <div class="login-image-section">
         <div class="image-container">
-          <img src="@/assets/login.jpg" alt="Register Illustration" />
+          <div class="logo-wrapper">
+            <img src="@/assets/logo.svg" alt="Login Illustration" class="logo-image" />
+            <div class="logo-title">AIforUs</div>
+            <div class="logo-subtitle">Your AI Partner for Success</div>
+          </div>
         </div>
       </div>
     </div>
@@ -251,20 +254,73 @@ const handleRegister = async () => {
   position: relative;
 }
 
+.login-image-section {
+  width: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+  padding: 40px;
+}
+
 .image-container {
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-.register-image-section img {
-  max-width: 85%;
-  max-height: 85%;
+.logo-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 24px;
+}
+
+.logo-image {
+  width: 200px;
+  height: 200px;
   object-fit: contain;
-  border-radius: 12px;
+  /* filter: brightness(0) invert(1); 将logo变为白色 */
+  transition: all 0.3s ease;
+}
+
+.logo-image:hover {
+  transform: scale(1.5);
+  /* filter: brightness(0) invert(1) drop-shadow(0 0 20px rgba(255, 255, 255, 0.3)); */
+}
+
+.logo-title {
+  font-size: 36px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.logo-title:hover {
+  transform: translateY(-2px);
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.logo-subtitle {
+  font-size: 16px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+  letter-spacing: 0.5px;
+  opacity: 0.9;
+}
+
+/* 添加动画效果 */
+.logo-wrapper {
+  animation: fadeInUp 0.8s ease-out;
 }
 
 /* 响应式设计 */
