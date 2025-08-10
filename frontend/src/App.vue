@@ -28,6 +28,10 @@ const autoLogin = async () => {
         const {token, role, username, email} = response.data;
         authStore.login(response.data);
         licenseStore.getLicense(response.data.email);
+        console.log(router);
+        if(router.currentRoute.value.includes("verify-email")) {
+          return; // 如果当前在验证邮箱页面，直接返回
+        }
         if (role === "admin") {
           router.push("/dashboard/admin");
         } else {

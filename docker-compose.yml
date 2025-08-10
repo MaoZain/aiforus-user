@@ -58,6 +58,24 @@ services:
     networks:
       - aiforus_network
 
+  # phpMyAdmin 数据库管理
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: aiforus_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: aiforus
+      PMA_PASSWORD: pass1234
+      PMA_ARBITRARY: 1
+      MYSQL_ROOT_PASSWORD: rootpassword123
+    ports:
+      - "8090:80"
+    depends_on:
+      - mysql
+    networks:
+      - aiforus_network
+
 volumes:
   mysql_data:
 

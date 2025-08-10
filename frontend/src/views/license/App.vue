@@ -1,132 +1,146 @@
 <template>
-  <div>
-    <template v-if="licenseType">
-      <a-descriptions bordered class="custom-descriptions" :column="2">
-        <template #title>
-          <div class="desc-title-row">
-            <span>License Info</span>
-            <a-button :disabled="licenseState === 'suspended'" type="primary" class="upgrade-btn" @click="showModal = true">Upgrade</a-button>
-          </div>
-        </template>
-        <a-descriptions-item label="License Type" :span="2">
-          {{ licenseType }}
-        </a-descriptions-item>
-        <a-descriptions-item label="Start Date" :span="1">
-          {{ formatDate(licenseStart) }}
-        </a-descriptions-item>
-        <a-descriptions-item label="Expiry Date" :span="1">
-          {{ formatDate(licenseExpire) }}
-        </a-descriptions-item>
-        <a-descriptions-item label="Status" :span="2">
-          <a-badge :status="licenseState === 'active' ? 'success' : 'default'" :text="licenseState" />
-        </a-descriptions-item>
-        <a-descriptions-item label="License Code" :span="3">
-          <div class="license-code-wrapper">
-            <span 
-              class="license-code" 
-              @click="copyLicenseCode"
-              :title="licenseCode"
+  <a-spin :spinning="loading">
+    <div>
+      <template v-if="licenseType">
+        <a-descriptions bordered class="custom-descriptions" :column="2">
+          <template #title>
+            <div class="desc-title-row">
+              <span>License Info</span>
+              <a-button
+                :disabled="licenseState === 'suspended'"
+                type="primary"
+                class="upgrade-btn"
+                @click="showModal = true"
+                >Upgrade</a-button
+              >
+            </div>
+          </template>
+          <a-descriptions-item label="License Type" :span="2">
+            {{ licenseType }}
+          </a-descriptions-item>
+          <a-descriptions-item label="Start Date" :span="1">
+            {{ formatDate(licenseStart) }}
+          </a-descriptions-item>
+          <a-descriptions-item label="Expiry Date" :span="1">
+            {{ formatDate(licenseExpire) }}
+          </a-descriptions-item>
+          <a-descriptions-item label="Status" :span="2">
+            <a-badge :status="licenseState === 'active' ? 'success' : 'default'" :text="licenseState" />
+            <a-button
+              v-if="licenseState === 'suspended'"
+              type="link"
+              size="small"
+              @click="resendEmail"
+              :loading="resendingEmail"
+              class="active-email-btn"
+              style="margin-left: 8px;"
             >
-              {{ truncatedLicenseCode }}
-            </span>
-            <a-button 
-              type="link" 
-              size="small" 
-              @click="copyLicenseCode"
-              :icon="copyIcon"
-              class="copy-btn"
-              :disabled="licenseState === 'suspended'"
-            >
-              Copy
+              Please active your email
             </a-button>
-            <a-button 
-              type="link" 
-              size="small" 
-              @click="updateLicenseCode"
-              :loading="updating"
-              class="update-btn"
-              :disabled="licenseState === 'suspended'"
-            >
-              Update
-            </a-button>
-          </div>
-        </a-descriptions-item>
-      </a-descriptions>
-    </template>
-    <template v-else>
-      <a-empty
-        :image-style="{
-          height: '160px',
-        }"
+          </a-descriptions-item>
+          <a-descriptions-item label="License Code" :span="3">
+            <div class="license-code-wrapper">
+              <span class="license-code" @click="copyLicenseCode" :title="licenseCode">
+                {{ truncatedLicenseCode }}
+              </span>
+              <a-button
+                type="link"
+                size="small"
+                @click="copyLicenseCode"
+                :icon="copyIcon"
+                class="copy-btn"
+                :disabled="licenseState === 'suspended'"
+              >
+                Copy
+              </a-button>
+              <a-button
+                type="link"
+                size="small"
+                @click="updateLicenseCode"
+                :loading="updating"
+                class="update-btn"
+                :disabled="licenseState === 'suspended'"
+              >
+                Update
+              </a-button>
+            </div>
+          </a-descriptions-item>
+        </a-descriptions>
+      </template>
+      <template v-else>
+        <a-empty
+          :image-style="{
+            height: '160px',
+          }"
+        >
+          <template #description>
+            Please
+            <div style="margin-top: 16px; display: inline">
+              <a href="javascript:void(0);" class="active-link" @click="showModal = true">Active</a>
+            </div>
+            a license to use AiforUs.
+          </template>
+        </a-empty>
+      </template>
+      <a-modal
+        v-model:open="showModal"
+        title="Upgrade License"
+        @ok="handleUpgrade"
+        @cancel="showModal = false"
+        width="1000px"
       >
-        <template #description>
-          Please
-          <div style="margin-top: 16px; display: inline">
-            <a href="javascript:void(0);" class="active-link" @click="showModal = true">Active</a>
-          </div>
-          a license to use AiforUs.
-        </template>
-      </a-empty>
-    </template>
-
-    <a-modal
-      v-model:open="showModal"
-      title="Upgrade License"
-      @ok="handleUpgrade"
-      @cancel="showModal = false"
-      width="1000px"
-    >
-      <div class="pricing-modal">
-        <h2 class="pricing-title">Choose Your Pricing Plan</h2>
-        <div class="pricing-cards">
-          <div
-            class="pricing-card"
-            :class="{
-              active: upgradeType === 'Trial',
-              'active-trial': upgradeType === 'Trial',
-            }"
-            @click="upgradeType = 'Trial'"
-          >
-            <div class="plan-title">Trial</div>
-            <div class="plan-desc">Free access to basic features. Perfect for new users to try out the service.</div>
-          </div>
-          <div
-            class="pricing-card"
-            :class="{
-              active: upgradeType === 'Silver',
-              'active-silver': upgradeType === 'Silver',
-            }"
-            @click="upgradeType = 'Silver'"
-          >
-            <div class="plan-title">Silver</div>
-            <div class="plan-desc">Ideal for individuals and small teams. Enjoy standard support and features.</div>
-          </div>
-          <div
-            class="pricing-card"
-            :class="{
-              active: upgradeType === 'Gold',
-              'active-gold': upgradeType === 'Gold',
-            }"
-            @click="upgradeType = 'Gold'"
-          >
-            <div class="plan-title">Gold</div>
-            <div class="plan-desc">More resources and premium support for growing businesses.</div>
-          </div>
-          <div
-            class="pricing-card"
-            :class="{
-              active: upgradeType === 'Platinum',
-              'active-platinum': upgradeType === 'Platinum',
-            }"
-            @click="upgradeType = 'Platinum'"
-          >
-            <div class="plan-title">Platinum</div>
-            <div class="plan-desc">All advanced features and exclusive services for enterprises.</div>
+        <div class="pricing-modal">
+          <h2 class="pricing-title">Choose Your Pricing Plan</h2>
+          <div class="pricing-cards">
+            <div
+              class="pricing-card"
+              :class="{
+                active: upgradeType === 'Trial',
+                'active-trial': upgradeType === 'Trial',
+              }"
+              @click="upgradeType = 'Trial'"
+            >
+              <div class="plan-title">Trial</div>
+              <div class="plan-desc">Free access to basic features. Perfect for new users to try out the service.</div>
+            </div>
+            <div
+              class="pricing-card"
+              :class="{
+                active: upgradeType === 'Silver',
+                'active-silver': upgradeType === 'Silver',
+              }"
+              @click="upgradeType = 'Silver'"
+            >
+              <div class="plan-title">Silver</div>
+              <div class="plan-desc">Ideal for individuals and small teams. Enjoy standard support and features.</div>
+            </div>
+            <div
+              class="pricing-card"
+              :class="{
+                active: upgradeType === 'Gold',
+                'active-gold': upgradeType === 'Gold',
+              }"
+              @click="upgradeType = 'Gold'"
+            >
+              <div class="plan-title">Gold</div>
+              <div class="plan-desc">More resources and premium support for growing businesses.</div>
+            </div>
+            <div
+              class="pricing-card"
+              :class="{
+                active: upgradeType === 'Platinum',
+                'active-platinum': upgradeType === 'Platinum',
+              }"
+              @click="upgradeType = 'Platinum'"
+            >
+              <div class="plan-title">Platinum</div>
+              <div class="plan-desc">All advanced features and exclusive services for enterprises.</div>
+            </div>
           </div>
         </div>
-      </div>
-    </a-modal>
-  </div>
+      </a-modal>
+    </div>
+  </a-spin>
 </template>
 
 <script setup>
@@ -135,7 +149,7 @@ import { useLicenseStore } from "@/store/license";
 import { useAuthStore } from "@/store/auth";
 import { postAction } from "@/services/api";
 import { message } from "ant-design-vue";
-import { CopyOutlined, CheckOutlined } from '@ant-design/icons-vue';
+import { CopyOutlined, CheckOutlined } from "@ant-design/icons-vue";
 
 const licenseStore = useLicenseStore();
 const authStore = useAuthStore();
@@ -151,28 +165,48 @@ const licenseExpire = computed(() => licenseStore.licenseExpire);
 const licenseState = computed(() => licenseStore.licenseState);
 const licenseCode = computed(() => licenseStore.licenseCode);
 
+const loading = ref(false);
+
 // 截断显示的许可证代码
 const truncatedLicenseCode = computed(() => {
-  if (!licenseCode.value) return '';
+  if (!licenseCode.value) return "";
   const code = licenseCode.value;
   if (code.length <= 20) return code;
   return `${code.substring(0, 10)}...${code.substring(code.length - 10)}`;
 });
+
+// 重新发送验证邮件
+const resendEmail = async () => {
+  loading.value = true;
+  try {
+    const response = await postAction("/users/resendVerificationEmailToken", { email: authStore.useremail });
+
+    if (response.success) {
+      message.success("Verification email resent successfully. Please check your inbox.");
+    } else {
+      throw new Error(response.message || "Failed to resend verification email");
+    }
+  } catch (error) {
+    console.log("Error resending verification email:", error);
+  } finally {
+    loading.value = false;
+  }
+};
 
 // 复制许可证代码
 const copyLicenseCode = async () => {
   try {
     await navigator.clipboard.writeText(licenseCode.value);
     copyIcon.value = h(CheckOutlined);
-    message.success('License code copied to clipboard!');
-    
+    message.success("License code copied to clipboard!");
+
     // 2秒后恢复复制图标
     setTimeout(() => {
       copyIcon.value = h(CopyOutlined);
     }, 2000);
   } catch (error) {
-    console.error('Failed to copy:', error);
-    message.error('Failed to copy license code');
+    console.error("Failed to copy:", error);
+    message.error("Failed to copy license code");
   }
 };
 
@@ -180,22 +214,22 @@ const copyLicenseCode = async () => {
 const updateLicenseCode = async () => {
   try {
     updating.value = true;
-    
+
     // 调用API更新许可证代码
     const response = await postAction("/users/updateLicenseCode", {
-      email: authStore.useremail
+      email: authStore.useremail,
     });
-    
+
     if (response.success) {
       // 更新store中的许可证信息
       await licenseStore.getLicense(authStore.useremail);
-      message.success('License code updated successfully!');
+      message.success("License code updated successfully!");
     } else {
-      throw new Error(response.message || 'Failed to update license code');
+      throw new Error(response.message || "Failed to update license code");
     }
   } catch (error) {
-    console.error('Update license code error:', error);
-    message.error('Failed to update license code');
+    console.error("Update license code error:", error);
+    message.error("Failed to update license code");
   } finally {
     updating.value = false;
   }
@@ -204,50 +238,49 @@ const updateLicenseCode = async () => {
 async function handleUpgrade() {
   try {
     // 显示加载状态
-    const loadingKey = 'upgradeLoading';
-    message.loading({ content: 'Processing payment...', key: loadingKey, duration: 0 });
-    
+    const loadingKey = "upgradeLoading";
+    message.loading({ content: "Processing payment...", key: loadingKey, duration: 0 });
+
     // 准备请求参数
     const params = {
       type: upgradeType.value,
-      email:authStore.useremail, // 使用当前用户的邮箱
+      email: authStore.useremail, // 使用当前用户的邮箱
       // 添加成功和取消的回调URL
       successUrl: `${window.location.origin}/payment-success`,
       cancelUrl: `${window.location.origin}/payment-cancel`,
     };
-    
+
     // 对于付费版本，创建 Stripe 结账会话
     const response = await postAction("/payment/create-checkout-session", params);
-    
+
     if (response.success && response.data && response.data.url) {
       // 将会话ID存储在本地，以便支付成功后可以验证
-      localStorage.setItem('stripeSessionId', response.data.sessionId);
-      
+      localStorage.setItem("stripeSessionId", response.data.sessionId);
+
       // 重定向到 Stripe 托管的结账页面
       window.location.href = response.data.url;
     } else {
-      throw new Error(response.message || 'Failed to create checkout session');
+      throw new Error(response.message || "Failed to create checkout session");
     }
   } catch (error) {
-    console.error('Payment error:', error);
-    // message.error({ 
-    //   content: 'Payment processing failed. Please try again later.', 
-    //   key: 'upgradeLoading' 
+    console.error("Payment error:", error);
+    // message.error({
+    //   content: 'Payment processing failed. Please try again later.',
+    //   key: 'upgradeLoading'
     // });
   }
 }
 
 // 格式化日期函数
 const formatDate = (dateString) => {
-  if (!dateString) return ''
-  const date = new Date(dateString)
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  })
-}
-
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+};
 </script>
 
 <style scoped>
@@ -304,7 +337,6 @@ const formatDate = (dateString) => {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
-
 :deep(.ant-empty-description) {
   font-size: 18px;
   color: #555;
@@ -321,7 +353,7 @@ const formatDate = (dateString) => {
 }
 
 .license-code {
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   background-color: #f7f7f7;
   padding: 6px 12px;
   border-radius: 6px;
@@ -340,7 +372,8 @@ const formatDate = (dateString) => {
   transform: translateY(-1px);
 }
 
-.copy-btn, .update-btn {
+.copy-btn,
+.update-btn {
   padding: 0 8px;
   height: 28px;
   font-size: 12px;
@@ -464,7 +497,7 @@ const formatDate = (dateString) => {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .license-code {
     min-width: 100%;
   }

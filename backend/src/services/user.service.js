@@ -47,23 +47,23 @@ export const registerUser = async (username, email, password, role) => {
   }
   
   // 发送验证邮件
-  try {
-    const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`
+  // try {
+  //   const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`
     
-    await sendVerificationEmail(email, username, verificationUrl)
+  //   await sendVerificationEmail(email, username, verificationUrl)
     
-    console.log('User created successfully, verification email sent:', userId)
-  } catch (emailError) {
-    console.error('Failed to send verification email:', emailError.message)
-    // 邮件发送失败不应该阻止用户注册，但要记录错误
-    console.warn('User created but verification email failed to send')
-  }
+  //   console.log('User created successfully, verification email sent:', userId)
+  // } catch (emailError) {
+  //   console.error('Failed to send verification email:', emailError.message)
+  //   // 邮件发送失败不应该阻止用户注册，但要记录错误
+  //   console.warn('User created but verification email failed to send')
+  // }
   
-  console.log('User created successfully, verification email sent:', userId)
+  console.log('User created successfully', userId)
   
   return { 
     userId, 
-    message: 'Registration successful. Please check your email to verify your account.' 
+    message: 'Registration successful' 
   }
 }
 
@@ -132,7 +132,8 @@ export const resendVerificationEmail = async (email) => {
   )
   
   // 发送验证邮件
-  const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`
+   const verificationUrl = `${ 'http://localhost:3000'}/verify-email?token=${verificationToken}`
+  // const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`
   await sendVerificationEmail(email, user.username, verificationUrl)
   
   return { message: 'Verification email resent successfully' }
