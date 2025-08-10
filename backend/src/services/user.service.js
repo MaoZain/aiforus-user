@@ -132,8 +132,8 @@ export const resendVerificationEmail = async (email) => {
   )
   
   // 发送验证邮件
-   const verificationUrl = `${ 'http://localhost:3000'}/verify-email?token=${verificationToken}`
-  // const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`
+  //  const verificationUrl = `${ 'http://localhost:3000'}/verify-email?token=${verificationToken}`
+  const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`
   await sendVerificationEmail(email, user.username, verificationUrl)
   
   return { message: 'Verification email resent successfully' }
