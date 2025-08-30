@@ -149,7 +149,17 @@ async function handleInvite() {
 // 复制邀请链接
 async function copyInviteLink() {
   try {
-    await navigator.clipboard.writeText(inviteLink.value);
+    if(navigator.clipboard){
+      await navigator.clipboard.writeText(inviteLink.value);
+    } else {
+      // 兼容不支持 Clipboard API 的浏览器
+      const textArea = document.createElement("textarea");
+      textArea.value = inviteLink.value;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+    }
     message.success('Invite link copied to clipboard');
   } catch (error) {
     console.error('Failed to copy link:', error);
