@@ -116,7 +116,7 @@ const handleRegister = async () => {
       password: form.value.password,
     };
     const inviteToken = route.query.invite;
-    let registerUrl = '/users/register';
+    let registerUrl = '/auth/register';
     if (inviteToken) {
       params.inviteToken = inviteToken;
       registerUrl = '/users/inviteRegister';
