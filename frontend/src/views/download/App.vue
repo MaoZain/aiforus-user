@@ -46,7 +46,7 @@
                       type="primary"
                       size="large"
                       block
-                      href="/download/AIforUs.dmg"
+                      href="/downloads/AIforUs.dmg"
                       @click="trackDownload('mac')"
                     >
                       <template #icon>
@@ -89,7 +89,7 @@
                       type="primary"
                       size="large"
                       block
-                      href="/download/AIforUs-setup.exe"
+                      href="/downloads/AIforUs-setup.exe"
                       @click="trackDownload('windows')"
                     >
                       <template #icon>
