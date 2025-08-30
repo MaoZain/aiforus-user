@@ -91,15 +91,21 @@ export const verifyEmail = async (token) => {
     email: user.email,
     password: user.password_hash,
     licenseType: user.licenseType || 'trial',
+    licenseStartDate: user.license_start_date,
     licenseExpirationDate: user.licenseExpirationDate,
-    licenseState: 'active',
-    role: user.role || 'user',
-    username: user.username,
+    licenseState: user.license_state,
+    role: user.role || "user",
+    username: user.user_name,
   }
   
   // 使用RSA私钥生成token
-  const licenseToken = generateTokenWithRSA(tokenPayload)
-  
+  const licenseToken = await generateTokenWithRSA(tokenPayload)
+  console.log("Generated license token verify email:", licenseToken)
+  // 更新用户状态
+  await pool.query(
+    'UPDATE users SET license_token = ? WHERE email = ?',
+    [licenseToken, user.email]
+  )
   return { 
     message: 'Email verified successfully', 
     user: {

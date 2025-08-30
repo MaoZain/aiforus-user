@@ -10,6 +10,7 @@ import {
   getUserCredits,
   extendLicenseExpiration
 } from "../services/user.service.js";
+import { pool } from '../config/db.js'
 import { AppError } from "../utils/AppError.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import { findUserByEmail } from "../models/user.model.js";
@@ -46,7 +47,7 @@ export const getLicenseByEmail = asyncHandler(async (req, res) => {
 
   // 返回license相关信息
   const license = {
-    licenseType: userInfo.license_type || "free",
+    licenseType: userInfo.license_type || "trial",
     licenseStart: userInfo.license_start_date || null,
     licenseExpire: userInfo.license_expiration_date || null,
     licenseState: userInfo.license_state || null,
@@ -115,7 +116,12 @@ export const updateLicenseCode = asyncHandler(async (req, res) => {
     username: user.user_name,
   };
   //使用RSA私钥生成token
-  const licenseToken = generateTokenWithRSA(tokenPayload);
+  const licenseToken = await generateTokenWithRSA(tokenPayload);
+  console.log("Generated license token update code:", licenseToken);
+  await pool.query(
+    'UPDATE users SET license_token = ? WHERE email = ?',
+    [licenseToken, user.email]
+  ) 
   res.success(licenseToken, "License code updated successfully");
 });
 
