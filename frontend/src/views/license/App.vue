@@ -196,7 +196,17 @@ const resendEmail = async () => {
 // 复制许可证代码
 const copyLicenseCode = async () => {
   try {
-    await navigator.clipboard.writeText(licenseCode.value);
+    if(navigator.clipboard){
+      await navigator.clipboard.writeText(licenseCode.value);
+    } else {
+      // 兼容不支持 Clipboard API 的浏览器
+      const textArea = document.createElement("textarea");
+      textArea.value = licenseCode.value;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+    }
     copyIcon.value = h(CheckOutlined);
     message.success("License code copied to clipboard!");
 
