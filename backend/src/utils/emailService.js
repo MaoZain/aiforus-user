@@ -1,99 +1,98 @@
-import nodemailer from 'nodemailer'
+import Dm20151123, * as $Dm20151123 from '@alicloud/dm20151123'
+import * as $OpenApi from '@alicloud/openapi-client'
+import * as $Util from '@alicloud/tea-util'
 
-// 创建邮件传输器
-const createTransporter = () => {
-  // 验证必要的环境变量
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    throw new Error('SMTP credentials not configured. Please set SMTP_USER and SMTP_PASS in environment variables.')
+// 创建阿里云邮件推送客户端
+const createDmClient = () => {
+  const accessKeyId = process.env.ALIYUN_ACCESS_KEY_ID
+  const accessKeySecret = process.env.ALIYUN_ACCESS_KEY_SECRET
+  
+  if (!accessKeyId || !accessKeySecret) {
+    throw new Error('阿里云访问密钥未配置，请设置 ALIYUN_ACCESS_KEY_ID 和 ALIYUN_ACCESS_KEY_SECRET')
   }
-
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT) || 465,
-    secure: true, // true for 465, false for other ports
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-    // 添加调试选项
-    debug: process.env.NODE_ENV === 'development',
-    logger: process.env.NODE_ENV === 'development'
+  
+  const config = new $OpenApi.Config({
+    accessKeyId,
+    accessKeySecret,
+    endpoint: 'dm.us-east-1.aliyuncs.com'
   })
+  
+  return new Dm20151123.default(config)
+}
+
+// 发送单封邮件
+const sendSingleMail = async (params) => {
+  const client = createDmClient()
+  
+  try {
+    const singleSendMailRequest = new $Dm20151123.SingleSendMailRequest(params)
+    const runtime = new $Util.RuntimeOptions({})
+    const result = await client.singleSendMailWithOptions(singleSendMailRequest, runtime)
+    return result.body
+  } catch (error) {
+    console.error('邮件SDK调用失败:', error)
+    throw error
+  }
 }
 
 // 测试邮件连接
 export const testEmailConnection = async () => {
   try {
-    const transporter = createTransporter()
-    await transporter.verify()
-    console.log('Email connection verified successfully')
+    // 测试SDK配置是否正确
+    createDmClient()
+    console.log('阿里云邮件SDK配置验证成功')
     return true
   } catch (error) {
-    console.error('Email connection test failed:', error.message)
+    console.error('邮件SDK配置验证失败:', error.message)
     return false
   }
 }
 
 export const sendVerificationEmail = async (email, username, verificationUrl) => {
   try {
-    // 首先测试连接
-    const transporter = createTransporter()
+    console.log('使用阿里云邮件推送SDK发送验证邮件到:', email)
     
-    console.log('Testing email connection...')
-    await transporter.verify()
-    console.log('Email connection verified')
+    const htmlBody = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 20px;">
+        <h3>Email Verification</h3>
+        <p>Hello ${username},</p>
+        <p>You are registering an account with ${process.env.APP_NAME || 'AiForus'}. To complete your registration, please verify your email address.</p>
+        <p>Please click the following link to verify:</p>
+        <p><a href="${verificationUrl}">${verificationUrl}</a></p>
+        <p>This link is valid for 1 hour.</p>
+        <p>If you did not request this registration, please ignore this email.</p>
+        <br>
+        <p>Thank you</p>
+        <p>${process.env.APP_NAME || 'AiForus'} Team</p>
+      </div>
+    `
     
-    const mailOptions = {
-      from: `"${process.env.APP_NAME || 'Your App'}" <${process.env.SMTP_USER}>`,
-      to: email,
-      subject: '请验证您的邮箱地址',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>欢迎注册 ${process.env.APP_NAME || 'Your App'}!</h2>
-          <p>亲爱的 ${username}，</p>
-          <p>感谢您注册我们的服务。请点击下面的链接来验证您的邮箱地址：</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${verificationUrl}" 
-               style="background-color: #007bff; color: white; padding: 12px 30px; 
-                      text-decoration: none; border-radius: 5px; display: inline-block;">
-              验证邮箱
-            </a>
-          </div>
-          <p>或者复制以下链接到浏览器中打开：</p>
-          <p style="word-break: break-all; color: #666;">${verificationUrl}</p>
-          <p><strong>注意：此链接将在1小时后过期。</strong></p>
-          <p>如果您没有注册我们的服务，请忽略此邮件。</p>
-          <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
-          <p style="color: #666; font-size: 12px;">
-            此邮件由系统自动发送，请勿回复。
-          </p>
-        </div>
-      `,
+    const params = {
+      accountName: process.env.ALIYUN_EMAIL_ACCOUNT,
+      replyToAddress: false,
+      addressType: 1,
+      toAddress: email,
+      fromAlias: process.env.APP_NAME || 'AiForus',
+      subject: 'Email Verification Required',
+      htmlBody: htmlBody
     }
     
-    console.log('Sending verification email to:', email)
-    const result = await transporter.sendMail(mailOptions)
-    console.log('Verification email sent successfully:', result.messageId)
+    const result = await sendSingleMail(params)
+    console.log('验证邮件发送成功:', result.envId)
     
-    return result
+    return { messageId: result.envId }
   } catch (error) {
-    console.error('Error sending verification email:', {
-      message: error.message,
-      code: error.code,
-      command: error.command,
-      response: error.response,
-      responseCode: error.responseCode
-    })
+    console.error('验证邮件发送失败:', error.message)
     
     // 根据错误类型提供更具体的错误信息
-    if (error.code === 'EAUTH') {
-      throw new Error('邮件认证失败，请检查SMTP用户名和密码')
-    } else if (error.code === 'ECONNECTION') {
-      throw new Error('无法连接到邮件服务器，请检查网络连接和SMTP配置')
-    } else if (error.code === 'ETIMEDOUT') {
-      throw new Error('邮件发送超时，请稍后重试')
+    if (error.code === 'InvalidAccessKeyId') {
+      throw new Error('阿里云访问密钥ID无效')
+    } else if (error.code === 'SignatureDoesNotMatch') {
+      throw new Error('阿里云签名验证失败，请检查访问密钥')
+    } else if (error.message && error.message.includes('AccountName')) {
+      throw new Error('发信地址配置错误，请检查ALIYUN_EMAIL_ACCOUNT配置')
     } else {
-      throw new Error(`邮件发送失败: ${error.message}`)
+      throw new Error(`邮件发送失败: ${error.message || error.code}`)
     }
   }
 }

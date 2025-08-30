@@ -181,3 +181,106 @@ export const updateUserInfoByEmail = async (email, updateData) => {
 
   return updatedUser
 }
+
+// 添加用户积分
+export const addUserCredits = async (email, inviteeEmail, credits, reason = 'manual') => {
+  try {
+    const user = await findUserByEmail(email)
+    if (!user) {
+      throw new Error('User not found')
+    }
+
+    const currentCredits = user.credits || 0
+    const newCredits = currentCredits + credits
+
+    // 更新用户积分
+    await pool.execute(
+      'UPDATE users SET credits = ? WHERE email = ?',
+      [newCredits, email]
+    )
+
+    const inviteeUser = await findUserByEmail(inviteeEmail)
+    if (!inviteeUser) {
+      throw new Error('Invitee not found')
+    }
+    const currentInviteeCredits = inviteeUser.credits || 0
+    const newInviteeCredits = currentInviteeCredits + credits
+
+    // 更新被邀请人积分
+    await pool.execute(
+      'UPDATE users SET credits = ? WHERE email = ?',
+      [newInviteeCredits, inviteeEmail]
+    )
+
+    // 记录积分变动日志（可选）
+    // await pool.execute(
+    //   `INSERT INTO credit_logs (user_email, credit_change, reason, created_at) 
+    //    VALUES (?, ?, ?, NOW())`,
+    //   [email, credits, reason]
+    // )
+
+    console.log(`Added ${credits} credits to user ${email}. New balance: ${newCredits}`)
+    
+    return {
+      email,
+      previousCredits: currentCredits,
+      addedCredits: credits,
+      newCredits: newCredits,
+      reason
+    }
+  } catch (error) {
+    console.error('Error adding user credits:', error)
+    throw error
+  }
+}
+
+// 获取用户积分
+export const getUserCredits = async (email) => {
+  try {
+    const user = await findUserByEmail(email)
+    if (!user) {
+      throw new AppError('User not found', 404, 'USER_NOT_FOUND')
+    }
+
+    return {
+      email,
+      totalPoints: user.credits || 0,
+      lastUpdated: user.updated_at || user.registration_date
+    }
+  } catch (error) {
+    console.error('Error fetching user credits:', error)
+    throw error
+  }
+}
+
+// 延长用户许可证有效期
+export const extendLicenseExpiration = async (email, extensionData) => {
+  try {
+    const user = await findUserByEmail(email)
+    if (!user) {
+      throw new AppError('User not found', 404, 'USER_NOT_FOUND')
+    }
+
+    const { license_expiration_date } = extensionData
+    
+    // 格式化日期为 YYYY-MM-DD 格式
+    const formattedDate = license_expiration_date.toISOString().split('T')[0]
+
+    // 更新用户的许可证过期时间
+    const result = await pool.execute(
+      'UPDATE users SET license_expiration_date = ? WHERE email = ?',
+      [formattedDate, email]
+    )
+
+    console.log(`Extended license expiration for user ${email} to ${formattedDate}`)
+    
+    return {
+      email,
+      newExpirationDate: formattedDate,
+      previousExpirationDate: user.license_expiration_date
+    }
+  } catch (error) {
+    console.error('Error extending license expiration:', error)
+    throw error
+  }
+}

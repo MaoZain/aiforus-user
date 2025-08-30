@@ -10,6 +10,9 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@alicloud/dm20151123": "^1.6.1",
+    "@alicloud/openapi-client": "^0.4.15",
+    "@aws-sdk/client-ses": "^3.864.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",

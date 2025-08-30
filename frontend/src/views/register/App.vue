@@ -80,11 +80,13 @@
 
 <script setup>
 import { ref } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute,useRouter } from "vue-router";
 import { message } from "ant-design-vue";
 import { postAction } from "@/services/api";
 
+const route = useRoute();
 const router = useRouter();
+
 
 const formRef = ref();
 const form = ref({
@@ -113,9 +115,14 @@ const handleRegister = async () => {
       email: form.value.email,
       password: form.value.password,
     };
-
+    const inviteToken = route.query.invite;
+    let registerUrl = '/users/register';
+    if (inviteToken) {
+      params.inviteToken = inviteToken;
+      registerUrl = '/users/inviteRegister';
+    }
     // 发送 POST 请求到后端
-    const response = await postAction("/auth/register", params);
+    const response = await postAction(registerUrl, params);
 
     if (!response.success) {
       message.error("Registration failed")
