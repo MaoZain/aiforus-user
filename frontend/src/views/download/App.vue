@@ -46,7 +46,7 @@
                       type="primary"
                       size="large"
                       block
-                      href="/downloads/AIforUs.dmg"
+                      href="https://aiforus-download.oss-us-west-1.aliyuncs.com/AIforUs.dmg?Expires=1756565848&OSSAccessKeyId=TMP.3Ksyh6ePxz4nGFGFwBvNUT2FGpsnJGptCvM2LB8vVBFuPvF3nFHtP766c3gL9WQkJ5x5twRFPwLV6w9NyW6Uq4KZJ4nndc&Signature=3O0jmJAQTYDzwCBQz5LmwHX3bek%3D"
                       @click="trackDownload('mac')"
                     >
                       <template #icon>
