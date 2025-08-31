@@ -66,9 +66,8 @@ services:
     environment:
       PMA_HOST: mysql
       PMA_USER: aiforus
-      PMA_PASSWORD: pass1234
-      PMA_ARBITRARY: 1
-      MYSQL_ROOT_PASSWORD: rootpassword123
+      PMA_PASSWORD: aiforus@2025
+      MYSQL_ROOT_PASSWORD: aiforus@root@2025
     ports:
       - "8090:80"
     depends_on:
