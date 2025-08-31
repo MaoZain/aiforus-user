@@ -1,5 +1,9 @@
 <template>
-  <a-menu mode="inline" class="sidebar-menu">
+  <a-menu 
+    mode="inline" 
+    class="sidebar-menu"
+    :selectedKeys="[selectedKey]"
+  >
     <a-menu-item v-if="role === 'user'" key="profile">
       <template #icon><user-outlined style="font-size: 16px;"/></template>
       <router-link to="/dashboard">Profile</router-link>
@@ -25,6 +29,8 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
 import { useAuthStore } from "@/store/auth";
 import { 
   UserOutlined, 
@@ -36,6 +42,21 @@ import {
 
 const store = useAuthStore();
 const role = store.userRole;
+const route = useRoute();
+
+// 根据当前路由动态计算选中的菜单项
+const selectedKey = computed(() => {
+  const path = route.path;
+  
+  if (path === '/dashboard/license') return 'license';
+  if (path === '/dashboard/coupon') return 'coupon';
+  if (path === '/dashboard/admin') return 'management';
+  if (path === '/dashboard/download') return 'download';
+  if (path === '/dashboard') return 'profile';
+  
+  // 默认选中 profile 或 management（根据角色）
+  return role === 'admin' ? 'management' : 'profile';
+});
 </script>
 
 <style scoped>

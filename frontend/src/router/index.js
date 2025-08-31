@@ -91,9 +91,9 @@ router.beforeEach((to, from, next) => {
   //   return next('/home')
   // }
 
-  if (to.meta.role && store.userRole !== to.meta.role) {
-    return next("/404"); // 或跳转 403 页面
-  }
+  // if (to.meta.role && store.userRole !== to.meta.role) {
+  //   return next("/404"); // 或跳转 403 页面
+  // }
 
   // if (to.meta.guest && store.authToken) {
   //   return next('/') // 登录用户不能访问登录/注册页
