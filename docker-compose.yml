@@ -65,8 +65,6 @@ services:
     restart: unless-stopped
     environment:
       PMA_HOST: mysql
-      PMA_USER: aiforus
-      PMA_PASSWORD: pass1234
       MYSQL_ROOT_PASSWORD: rootpassword123
       PMA_ARBITRARY: 0 
     ports:
