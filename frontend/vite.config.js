@@ -26,13 +26,13 @@ export default defineConfig({
     open: true, // 自动打开浏览器
     proxy: {
       '/api': {
-        target: 'http://198.98.55.71:3001', // 后端服务地址 http://198.98.55.71:3001
+        target: 'http://localhost:3001', // 后端服务地址 http://198.98.55.71:3001
         changeOrigin: true, // 支持跨域
         rewrite: (path) => path.replace(/^\/api/, 'api') // 去掉 /api 前缀
       }
     }
   },
-  base: './', // 确保资源路径正确
+  base: '/', // 确保资源路径正确
   build: {
     outDir: 'dist' // 输出目录
   },
