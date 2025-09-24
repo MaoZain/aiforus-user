@@ -10,49 +10,19 @@
           <span class="gradient-text">Simple and Powerful</span>
         </h1>
         <p class="hero-subtitle">
-          AIforUs is a desktop application designed for AI learners. Featuring rich datasets, visualization tools, and interactive tutorials to help you master machine learning and data science with ease.
+          AIforUs is a desktop application designed for AI learners. Featuring rich datasets, visualization tools, and
+          interactive tutorials to help you master machine learning and data science with ease.
         </p>
         <div class="hero-actions">
           <button class="btn-primary" @click="downloadApp">Free Download</button>
           <button class="btn-secondary">Watch Demo</button>
         </div>
-        <!-- <p class="hero-note">Requires macOS 12.0 or later</p> -->
       </div>
+      <!-- 替换开始 -->
       <div class="hero-visual">
-        <div class="app-preview">
-          <div class="app-window">
-            <div class="window-header">
-              <div class="window-controls">
-                <span class="control red"></span>
-                <span class="control yellow"></span>
-                <span class="control green"></span>
-              </div>
-              <div class="window-title">AIforUs</div>
-            </div>
-            <div class="window-content">
-              <div class="sidebar">
-                <div class="nav-item active">📊 Analytics</div>
-                <div class="nav-item">📚 Tutorials</div>
-                <div class="nav-item">🛠️ Tools</div>
-              </div>
-              <div class="main-content">
-                <div class="dataset-card">
-                  <div class="card-image penguin"></div>
-                  <h4>Penguin Dataset</h4>
-                </div>
-                <div class="dataset-card">
-                  <div class="card-image titanic"></div>
-                  <h4>Titanic</h4>
-                </div>
-                <div class="dataset-card">
-                  <div class="card-image diamond"></div>
-                  <h4>Diamond Data</h4>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <img class="hero-image" src="@/assets/app-visual.jpg" alt="AIforUs 应用预览" loading="lazy" />
       </div>
+      <!-- 替换结束 -->
     </section>
 
     <!-- Features Section -->
@@ -72,13 +42,18 @@
           </div>
           <div class="feature-card">
             <div class="feature-icon">📚</div>
-            <h3>Interactive Tutorials</h3>
+            <h3>Learning</h3>
             <p>Clear step-by-step tutorials, from AI basics to advanced applications</p>
           </div>
           <div class="feature-card">
-            <div class="feature-icon">🗂️</div>
-            <h3>Rich Datasets</h3>
-            <p>Curated public datasets covering various domains and difficulty levels</p>
+            <div class="feature-icon">🔤</div>
+            <h3>Natural Language Processing</h3>
+            <p>Provides word cloud generation and audio-to-text in one concise toolkit.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🖼️</div>
+            <h3>Computer Vision</h3>
+            <p>Delivers OCR, object detection and image classification in a unified, streamlined workflow.</p>
           </div>
         </div>
       </div>
@@ -92,8 +67,9 @@
             <h2>AIforUs Desktop</h2>
             <p class="showcase-subtitle">Professional and User-friendly AI Learning Environment</p>
             <p class="showcase-description">
-              A desktop application tailored for AI learners. No complex configuration required, ready to use out of the box.
-              From data import to model training, from visualization to result analysis, enjoy a seamless end-to-end experience.
+              A desktop application tailored for AI learners. No complex configuration required, ready to use out of the
+              box. From data import to model training, from visualization to result analysis, enjoy a seamless
+              end-to-end experience.
             </p>
             <div class="showcase-actions">
               <button class="btn-primary" @click="downloadApp">Download Now</button>
@@ -154,42 +130,42 @@
 </template>
 
 <script>
-import { useAuthStore } from '@/store/auth'
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useAuthStore } from "@/store/auth";
+import { computed } from "vue";
+import { useRouter } from "vue-router";
 
 export default {
   name: "AIforUsHome",
   setup() {
-    const authStore = useAuthStore()
-    const router = useRouter()
-    const isAuthenticated = computed(() => authStore.isAuthenticated)
+    const authStore = useAuthStore();
+    const router = useRouter();
+    const isAuthenticated = computed(() => authStore.isAuthenticated);
 
     const downloadApp = () => {
       if (isAuthenticated.value) {
-        router.push('/dashboard/download') // 跳转到用户仪表板
+        router.push("/dashboard/download"); // 跳转到用户仪表板
       } else {
-        router.push('/login') // 跳转到登录页面
+        router.push("/login"); // 跳转到登录页面
       }
-    }
+    };
 
     return {
-      downloadApp
-    }
+      downloadApp,
+    };
   },
   mounted() {
     // Add smooth scrolling for navigation links
     const links = document.querySelectorAll('a[href^="#"]');
-    links.forEach(link => {
-      link.addEventListener('click', (e) => {
+    links.forEach((link) => {
+      link.addEventListener("click", (e) => {
         e.preventDefault();
-        const target = document.querySelector(link.getAttribute('href'));
+        const target = document.querySelector(link.getAttribute("href"));
         if (target) {
-          target.scrollIntoView({ behavior: 'smooth' });
+          target.scrollIntoView({ behavior: "smooth" });
         }
       });
     });
-  }
+  },
 };
 </script>
 
@@ -201,7 +177,7 @@ export default {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   line-height: 1.6;
   color: #1d1d1f;
 }
@@ -240,7 +216,7 @@ body {
 }
 
 .logo-text {
-  background: linear-gradient(135deg, #007AFF, #5856D6);
+  background: linear-gradient(135deg, #007aff, #5856d6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -259,11 +235,11 @@ body {
 }
 
 .nav-menu a:hover {
-  color: #007AFF;
+  color: #007aff;
 }
 
 .btn-download {
-  background: #007AFF;
+  background: #007aff;
   color: white;
   border: none;
   padding: 8px 16px;
@@ -274,7 +250,7 @@ body {
 }
 
 .btn-download:hover {
-  background: #0056CC;
+  background: #0056cc;
 }
 
 /* Hero Section */
@@ -287,6 +263,8 @@ body {
   gap: 60px;
   align-items: center;
   min-height: 80vh;
+  overflow: visible; /* 允许放大后溢出 */
+  position: relative;
 }
 
 .hero-title {
@@ -297,7 +275,7 @@ body {
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #007AFF, #5856D6, #AF52DE);
+  background: linear-gradient(135deg, #007aff, #5856d6, #af52de);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -316,7 +294,7 @@ body {
 }
 
 .btn-primary {
-  background: #007AFF;
+  background: #007aff;
   color: white;
   border: none;
   padding: 12px 24px;
@@ -328,14 +306,14 @@ body {
 }
 
 .btn-primary:hover {
-  background: #0056CC;
+  background: #0056cc;
   transform: translateY(-1px);
 }
 
 .btn-secondary {
   background: transparent;
-  color: #007AFF;
-  border: 2px solid #007AFF;
+  color: #007aff;
+  border: 2px solid #007aff;
   padding: 10px 22px;
   border-radius: 24px;
   font-size: 16px;
@@ -345,7 +323,7 @@ body {
 }
 
 .btn-secondary:hover {
-  background: #007AFF;
+  background: #007aff;
   color: white;
 }
 
@@ -389,9 +367,15 @@ body {
   border-radius: 50%;
 }
 
-.control.red { background: #ff5f57; }
-.control.yellow { background: #ffbd2e; }
-.control.green { background: #28ca42; }
+.control.red {
+  background: #ff5f57;
+}
+.control.yellow {
+  background: #ffbd2e;
+}
+.control.green {
+  background: #28ca42;
+}
 
 .window-title {
   font-weight: 500;
@@ -418,7 +402,7 @@ body {
 }
 
 .nav-item.active {
-  background: #007AFF;
+  background: #007aff;
   color: white;
 }
 
@@ -444,9 +428,15 @@ body {
   margin: 0 auto 8px;
 }
 
-.card-image.penguin { background: linear-gradient(45deg, #667eea 0%, #764ba2 100%); }
-.card-image.titanic { background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%); }
-.card-image.diamond { background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%); }
+.card-image.penguin {
+  background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+}
+.card-image.titanic {
+  background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
+}
+.card-image.diamond {
+  background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+}
 
 .dataset-card h4 {
   font-size: 12px;
@@ -625,32 +615,66 @@ body {
   border-top: 1px solid #424245;
   color: #86868b;
 }
+/* Hero Visual (Right Column Image) */
+.hero-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  overflow: visible;
+  position: relative;
+  z-index: 5;
+}
+
+.hero-image {
+  width: 100%; /* 在右侧 1fr 列中占满其宽度，即整体的一半 */
+  height: auto;
+  display: block;
+  object-fit: contain;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+  transition: transform 0.6s ease, box-shadow 0.6s ease;
+  transform-origin: right center; /* 从右向左放大，覆盖文字 */
+  position: relative;
+  z-index: 5;
+}
+
+.hero-visual:hover .hero-image {
+  transform: scale(2);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.25);
+}
+
+@media (max-width: 900px) {
+  .hero-visual:hover .hero-image {
+    transform: scale(1.1); /* 移动端缩小放大幅度，避免遮挡过多 */
+  }
+}
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .nav-menu {
     display: none;
   }
-  
+
   .hero-section {
     grid-template-columns: 1fr;
     text-align: center;
     gap: 40px;
   }
-  
+
   .hero-title {
     font-size: 36px;
   }
-  
+
   .showcase-content {
     grid-template-columns: 1fr;
     text-align: center;
   }
-  
+
   .features-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .footer-content {
     grid-template-columns: 1fr;
     text-align: center;

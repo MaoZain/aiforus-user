@@ -15,18 +15,20 @@
           @submit.prevent="handleLogin"
           @keydown.enter.prevent="handleLogin"
         >
-          <a-form-item label="Username" name="username" :rules="[{ required: true, message: 'Please enter username' }]">
+          <a-form-item label="Username" name="username" 
+            :rules="[{ validator: validateUsername }]">
             <a-input 
               v-model:value="form.username" 
-              placeholder="Type your username" 
+              placeholder="Enter username (choose either username or email)" 
               size="large"
             />
           </a-form-item>
 
-          <a-form-item label="Email" name="email" :rules="[{ required: true, type: 'email', message: 'Please enter a valid email' }]">
+          <a-form-item label="Email" name="email" 
+            :rules="[{ validator: validateEmail }]">
             <a-input 
               v-model:value="form.email" 
-              placeholder="Enter your email" 
+              placeholder="Enter email (choose either username or email)" 
               size="large"
               type="email"
             />
@@ -109,9 +111,9 @@ const handleLogin = async () => {
 
     // 保存 token 到本地存储
     const {token, role } = response.data;
-    authStore.login({token, role, username, email});
+    authStore.login({token, role, username:response.data.username, email:response.data.email});
     console.log(licenseStore.getLicense);
-    licenseStore.getLicense(email);
+    licenseStore.getLicense(response.data.email);
 
     // 成功提示并跳转
     message.success("Login successful! Redirecting to dashboard...");
@@ -128,6 +130,28 @@ const handleLogin = async () => {
 // 跳转到注册页面
 const signUp = () => {
   router.push("/register");
+};
+
+const validateUsername = async (_rule, value) => {
+  const { username, email } = form.value;
+  if (!username && !email) {
+    return Promise.reject('Either username or email is required');
+  }
+  return Promise.resolve();
+};
+
+const validateEmail = async (_rule, value) => {
+  const { username, email } = form.value;
+  if (!username && !email) {
+    return Promise.reject('Either username or email is required');
+  }
+  if (email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return Promise.reject('Please enter a valid email address');
+    }
+  }
+  return Promise.resolve();
 };
 </script>
 

@@ -2,7 +2,7 @@ import { pool } from '../config/db.js'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
-import { createUser, findUserByEmail } from '../models/user.model.js'
+import { createUser, findUserByEmail,findUserByUsername } from '../models/user.model.js'
 import { AppError } from '../utils/AppError.js'
 import { generateTokenWithRSA } from '../utils/jwt.js'
 import { sendVerificationEmail } from '../utils/emailService.js'  // 需要创建邮件服务
@@ -17,6 +17,10 @@ export const getUsersFromDB = async () => {
 export const registerUser = async (username, email, password, role) => {
   const existingUser = await findUserByEmail(email)
   if (existingUser) {
+    throw new AppError('User already exists', 400, 'USER_EXISTS')
+  }
+  const existingUserByName = await findUserByUsername(username)
+  if (existingUserByName) {
     throw new AppError('User already exists', 400, 'USER_EXISTS')
   }
 
@@ -157,8 +161,25 @@ export const loginUser = async (username, email, password) => {
     throw new AppError('Invalid email or password', 400, 'INVALID_CREDENTIALS')
   }
 
-  const token = jwt.sign({ username:username, email:email}, JWT_SECRET, { expiresIn: '1h' })
-  return { token, role: user.role, username:username, email:email }
+  const token = jwt.sign({ username:user.user_name, email:user.email}, JWT_SECRET, { expiresIn: '1h' })
+  return { token, role: user.role, returnedUsername:user.user_name, email:user.email }
+}
+
+export const loginUserByUsername = async (username, email, password) => {
+  console.log("loginUser called with username:", username);
+  const user = await findUserByUsername(username)
+  if (!user) {
+    throw new AppError('User not found', 400, 'USER_NOT_FOUND')
+  }
+
+  const isPasswordValid = await bcrypt.compare(password, user.password_hash)
+  if (!isPasswordValid) {
+    throw new AppError('Invalid email or password', 400, 'INVALID_CREDENTIALS')
+  }
+
+  const token = jwt.sign({ username:username, email:user.email}, JWT_SECRET, { expiresIn: '1h' })
+  console.log(user.email);
+  return { token, role: user.role, username:username, useremail:user.email }
 }
 
 export const getUserInfoByEmail = async (email) => {

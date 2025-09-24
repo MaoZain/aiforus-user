@@ -1,7 +1,19 @@
-import express from 'express'
-import { getAllUsers, getUserByEmail,updateProfileByEmail,getLicenseByEmail,updateLicenseCode,verifyEmailToken,resendVerificationEmailToken,generateInviteLink,handleInviteRegistration,getUserPoints} from '../controllers/user.controller.js'
+import express from "express";
+import {
+  getAllUsers,
+  getUserByEmail,
+  updateProfileByEmail,
+  getLicenseByEmail,
+  updateLicenseCode,
+  verifyEmailToken,
+  resendVerificationEmailToken,
+  generateInviteLink,
+  handleInviteRegistration,
+  getUserPoints,
+  getCouponHistoryByEmail,
+} from "../controllers/user.controller.js";
 
-const router = express.Router()
+const router = express.Router();
 
 /**
  * @swagger
@@ -41,7 +53,7 @@ const router = express.Router()
  *       500:
  *         description: Internal server error
  */
-router.get('/', getAllUsers)
+router.get("/", getAllUsers);
 
 /**
  * @swagger
@@ -98,8 +110,8 @@ router.get('/', getAllUsers)
  *       500:
  *         description: Internal server error
  */
-router.get('/profile/:email', getUserByEmail)
-router.get('/licenseInfo/:email', getLicenseByEmail)
+router.get("/profile/:email", getUserByEmail);
+router.get("/licenseInfo/:email", getLicenseByEmail);
 
 /**
  * @swagger
@@ -150,16 +162,18 @@ router.get('/licenseInfo/:email', getLicenseByEmail)
  *       500:
  *         description: Failed to fetch user points
  */
-router.get('/points/:email', getUserPoints)
+router.get("/points/:email", getUserPoints);
 
-router.post('/updateProfile/', updateProfileByEmail)
+router.post("/updateProfile/", updateProfileByEmail);
 
-router.post('/updateLicenseCode/', updateLicenseCode)
+router.post("/updateLicenseCode/", updateLicenseCode);
 
-router.post('/verifyEmailToken/', verifyEmailToken)
-router.post('/resendVerificationEmailToken/', resendVerificationEmailToken)
+router.post("/verifyEmailToken/", verifyEmailToken);
+router.post("/resendVerificationEmailToken/", resendVerificationEmailToken);
 
-router.post('/generateInviteLink/', generateInviteLink)
-router.post('/inviteRegister/', handleInviteRegistration)
+router.post("/generateInviteLink/", generateInviteLink);
+router.post("/inviteRegister/", handleInviteRegistration);
 
-export default router
+router.get("/couponHistory/:email", getCouponHistoryByEmail);
+
+export default router;

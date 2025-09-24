@@ -89,7 +89,7 @@
                       type="primary"
                       size="large"
                       block
-                      href="/downloads/AIforUs-setup.exe"
+                      href="https://aiforus-download.oss-us-west-1.aliyuncs.com/aiforus-1.0.0-setup.exe"
                       @click="trackDownload('windows')"
                     >
                       <template #icon>
@@ -172,12 +172,12 @@ const selectedPlatform = ref("mac");
 
 // macOS version info
 const macVersion = ref("1.0.0");
-const macFileSize = ref("3.3GB");
+const macFileSize = ref("1023MB");
 const macUpdateDate = ref("August 01, 2025");
 
 // Windows version info
 const windowsVersion = ref("1.0.0");
-const windowsFileSize = ref("3.3GB");
+const windowsFileSize = ref("891MB");
 const windowsUpdateDate = ref("August 01, 2025");
 
 function trackDownload(platform) {

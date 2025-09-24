@@ -19,6 +19,11 @@ const routes = [
     meta: { guest: true },
   },
   {
+    path: "/license",
+    component: () => import("@/views/priceLicense/App.vue"),
+    meta: { guest: true },
+  },
+  {
     path: "/",
     component: () => import("@/views/home/App.vue"),
     meta: { guest: true },

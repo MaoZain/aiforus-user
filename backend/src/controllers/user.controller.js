@@ -3,18 +3,19 @@ import {
   getUsersFromDB,
   registerUser,
   loginUser,
+  loginUserByUsername,
   getUserInfoByEmail,
   updateUserInfoByEmail,
   verifyEmail,
   resendVerificationEmail,
   getUserCredits,
-  extendLicenseExpiration
+  extendLicenseExpiration,
 } from "../services/user.service.js";
-import { pool } from '../config/db.js'
+import { pool } from "../config/db.js";
 import { AppError } from "../utils/AppError.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
-import { findUserByEmail } from "../models/user.model.js";
-import { generateTokenWithRSA, verifyTokenWithRSA,generateToken } from "../utils/jwt.js"; // 确保导入 generateTokenWithRSA
+import { findUserByEmail, findUserByUsername } from "../models/user.model.js";
+import { generateTokenWithRSA, verifyTokenWithRSA, generateToken } from "../utils/jwt.js"; // 确保导入 generateTokenWithRSA
 
 // 获取所有用户
 export const getAllUsers = asyncHandler(async (req, res) => {
@@ -85,9 +86,14 @@ export const register = asyncHandler(async (req, res) => {
 // 登录
 export const login = asyncHandler(async (req, res) => {
   const { username, email, password } = req.body;
-
-  const { token, role } = await loginUser(username, email, password);
-  res.success({ token, role, username, email }, "Login successful");
+  ``;
+  if (!username) {
+    const { token, role, returnedUsername } = await loginUser(username, email, password);
+    res.success({ token, role, username: returnedUsername, email }, "Login successful");
+  } else {
+    const { token, role, useremail } = await loginUserByUsername(username, email, password);
+    res.success({ token, role, username, email: useremail }, "Login successful");
+  }
 });
 
 // update license code
@@ -118,10 +124,7 @@ export const updateLicenseCode = asyncHandler(async (req, res) => {
   //使用RSA私钥生成token
   const licenseToken = await generateTokenWithRSA(tokenPayload);
   console.log("Generated license token update code:", licenseToken);
-  await pool.query(
-    'UPDATE users SET license_token = ? WHERE email = ?',
-    [licenseToken, user.email]
-  ) 
+  await pool.query("UPDATE users SET license_token = ? WHERE email = ?", [licenseToken, user.email]);
   res.success(licenseToken, "License code updated successfully");
 });
 
@@ -180,6 +183,20 @@ export const generateInviteLink = asyncHandler(async (req, res) => {
   // 生成邀请链接
   const inviteUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/register?invite=${inviteToken}`;
   console.log("Generated invite URL:", inviteUrl);
+
+  // 新增：写入 coupon_history 表
+  try {
+    await pool.query("INSERT INTO coupon_history (inviterEmail, inviteeEmail, state, memo) VALUES (?, ?, ?, ?)", [
+      inviterEmail,
+      inviteeEmail,
+      "inactive",
+      "",
+    ]);
+    console.log("Inserted coupon_history record:", inviterEmail, inviteeEmail);
+  } catch (e) {
+    console.error("Failed to insert coupon_history record", e);
+  }
+
   res.success(
     {
       inviteUrl,
@@ -191,83 +208,99 @@ export const generateInviteLink = asyncHandler(async (req, res) => {
   );
 });
 
-
 export const handleInviteRegistration = asyncHandler(async (req, res) => {
-  const { inviteToken, username, email, password } = req.body
+  const { inviteToken, username, email, password } = req.body;
 
   if (!inviteToken || !username || !email || !password) {
-    throw new AppError('Invite token, username, email and password are required', 400, 'MISSING_REQUIRED_FIELDS')
+    throw new AppError("Invite token, username, email and password are required", 400, "MISSING_REQUIRED_FIELDS");
   }
 
   try {
     // 解密邀请令牌
-    const inviteData = await verifyTokenWithRSA(inviteToken)
+    const inviteData = await verifyTokenWithRSA(inviteToken);
     console.log("Invite data:", inviteData);
 
     if (!inviteData) {
-      throw new AppError('Invalid invite token', 400, 'INVALID_INVITE_TOKEN')
+      throw new AppError("Invalid invite token", 400, "INVALID_INVITE_TOKEN");
     }
 
     // 检查令牌是否过期
     if (Date.now() > inviteData.expiresAt) {
-      throw new AppError('Invite link has expired', 400, 'INVITE_EXPIRED')
+      throw new AppError("Invite link has expired", 400, "INVITE_EXPIRED");
     }
 
-    const { inviterEmail, inviteeEmail } = inviteData
+    const { inviterEmail, inviteeEmail } = inviteData;
 
     // 验证邀请人仍然存在
-    const inviter = await findUserByEmail(inviterEmail)
+    const inviter = await findUserByEmail(inviterEmail);
     if (!inviter) {
-      throw new AppError('Inviter not found', 404, 'INVITER_NOT_FOUND')
+      throw new AppError("Inviter not found", 404, "INVITER_NOT_FOUND");
     }
 
     // 检查被邀请人是否已经注册
-    const existingInvitee = await findUserByEmail(inviteeEmail)
+    const existingInvitee = await findUserByEmail(inviteeEmail);
     if (existingInvitee) {
-      throw new AppError('User already registered', 400, 'USER_ALREADY_EXISTS')
+      throw new AppError("User already registered", 400, "USER_ALREADY_EXISTS");
     }
     if (inviteeEmail !== email) {
-      throw new AppError('Email does not match the invited email', 400, 'EMAIL_MISMATCH')
+      throw new AppError("Email does not match the invited email", 400, "EMAIL_MISMATCH");
     }
     // 注册新用户
-    const newUserId = await registerUser(username, inviteeEmail, password, 'user')
+    const newUserId = await registerUser(username, inviteeEmail, password, "user");
 
     // 给邀请人有效期延长30天
-    const inviterCurrentExpiration = inviter.license_expiration_date ? new Date(inviter.license_expiration_date) : new Date();
+    const inviterCurrentExpiration = inviter.license_expiration_date
+      ? new Date(inviter.license_expiration_date)
+      : new Date();
     const inviterBaseDate = Math.max(inviterCurrentExpiration.getTime(), Date.now());
     const inviterNewExpiration = new Date(inviterBaseDate + 30 * 24 * 60 * 60 * 1000);
-    
+
     await extendLicenseExpiration(inviterEmail, { license_expiration_date: inviterNewExpiration });
 
     // 给被邀请人也延长30天许可证
     const newInvitee = await findUserByEmail(inviteeEmail);
     let inviteeNewExpirationDate = null;
-    
+
     if (newInvitee) {
-      const inviteeCurrentExpiration = newInvitee.license_expiration_date ? new Date(newInvitee.license_expiration_date) : new Date();
+      const inviteeCurrentExpiration = newInvitee.license_expiration_date
+        ? new Date(newInvitee.license_expiration_date)
+        : new Date();
       const inviteeBaseDate = Math.max(inviteeCurrentExpiration.getTime(), Date.now());
       const inviteeNewExpiration = new Date(inviteeBaseDate + 30 * 24 * 60 * 60 * 1000);
-      
+
       await extendLicenseExpiration(inviteeEmail, { license_expiration_date: inviteeNewExpiration });
-      inviteeNewExpirationDate = inviteeNewExpiration.toISOString().split('T')[0];
+      inviteeNewExpirationDate = inviteeNewExpiration.toISOString().split("T")[0];
     }
 
-    res.success({
-      userId: newUserId,
-      inviterEmail,
-      inviteeEmail,
-      licenseExtended: true,
-      inviterNewExpirationDate: inviterNewExpiration.toISOString().split('T')[0],
-      inviteeNewExpirationDate: inviteeNewExpirationDate
-    }, 'Registration successful, both inviter and invitee license extended by 30 days')
+    // 新增：将该邀请记录状态更新为 active 并写入 memo
+    try {
+      await pool.query(
+        "UPDATE coupon_history SET state = ?, memo = ? WHERE inviterEmail = ? AND inviteeEmail = ?",
+        ["active", "Extended by one month", inviterEmail, inviteeEmail]
+      );
+      console.log("coupon_history state updated to active with memo:", inviterEmail, inviteeEmail);
+    } catch (e) {
+      console.error("Failed to update coupon_history state/memo", e);
+    }
 
+    res.success(
+      {
+        userId: newUserId,
+        inviterEmail,
+        inviteeEmail,
+        licenseExtended: true,
+        inviterNewExpirationDate: inviterNewExpiration.toISOString().split("T")[0],
+        inviteeNewExpirationDate: inviteeNewExpirationDate,
+      },
+      "Registration successful, both inviter and invitee license extended by 30 days"
+    );
   } catch (error) {
     if (error instanceof AppError) {
-      throw error
+      throw error;
     }
-    throw new AppError('Failed to process invite registration', 500, 'INVITE_REGISTRATION_FAILED')
+    throw new AppError("Failed to process invite registration", 500, "INVITE_REGISTRATION_FAILED");
   }
-})
+});
 
 // 获取用户积分
 export const getUserPoints = asyncHandler(async (req, res) => {
@@ -288,4 +321,21 @@ export const getUserPoints = asyncHandler(async (req, res) => {
   }
 });
 
+export const getCouponHistoryByEmail = asyncHandler(async (req, res) => {
+  const { email }  = req.params
+  console.log(email);
 
+  if (!email) {
+    throw new AppError("Email is required", 400, "EMAIL_REQUIRED");
+  }
+
+  try {
+    const [rows] = await pool.query(
+      "SELECT inviterEmail, inviteeEmail, state, memo FROM coupon_history WHERE inviterEmail = ?",
+      [email]
+    );
+    res.success(rows, "Coupon history fetched successfully");
+  } catch (err) {
+    throw new AppError("Failed to fetch coupon history", 500, "COUPON_HISTORY_FETCH_FAILED");
+  }
+});
