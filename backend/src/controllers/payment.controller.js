@@ -72,15 +72,14 @@ export const verifySession = asyncHandler(async (req, res) => {
   const licenseType = session.metadata.licenseType;
   const couponCode = session.metadata.couponCode;
   const product = productCatalog[licenseType];
-  // 更新数据库中的 license type
-  const updateSuccess = await updateUserLicenseType(email, licenseType, couponCode, product.price);
-  if (!updateSuccess) {
-    throw new AppError("Failed to update license type", 500, "UPDATE_FAILED");
-  }
-
   // 检查支付状态
   if (session.payment_status === "paid") {
     res.success({ status: "success", session }, "Payment was successful");
+    // 更新数据库中的 license type
+    const updateSuccess = await updateUserLicenseType(email, licenseType, couponCode, product.price);
+    if (!updateSuccess) {
+      throw new AppError("Failed to update license type", 500, "UPDATE_FAILED");
+    }
   } else {
     res.success({ status: "pending", session }, "Payment is not completed yet");
   }
@@ -115,8 +114,16 @@ export const createDonationSession = asyncHandler(async (req, res) => {
     payment_method_types: ["card"],
     line_items: lineItems,
     mode: "payment",
-    success_url: successUrl || (process.env.FRONTEND_URL ? `${process.env.FRONTEND_URL}/donation-success` : "http://localhost:3000/donation-success"),
-    cancel_url: cancelUrl || (process.env.FRONTEND_URL ? `${process.env.FRONTEND_URL}/donation-cancel` : "http://localhost:3000/donation-cancel"),
+    success_url:
+      successUrl ||
+      (process.env.FRONTEND_URL
+        ? `${process.env.FRONTEND_URL}/donation-success`
+        : "http://localhost:3000/donation-success"),
+    cancel_url:
+      cancelUrl ||
+      (process.env.FRONTEND_URL
+        ? `${process.env.FRONTEND_URL}/donation-cancel`
+        : "http://localhost:3000/donation-cancel"),
     metadata: {
       email,
       donation: "true",
