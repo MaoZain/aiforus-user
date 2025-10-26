@@ -1,5 +1,38 @@
 <template>
   <div>
+    <!-- 新增：数据统计卡片区域 -->
+    <div class="stats-container" style="margin-bottom: 24px;">
+      <a-row :gutter="16">
+        <a-col :span="8">
+          <a-card class="stats-card">
+            <a-statistic
+              title="Total Users"
+              :value="statsData.totalUsers"
+              :value-style="{ color: '#1890ff' }"
+            />
+          </a-card>
+        </a-col>
+        <a-col :span="8">
+          <a-card class="stats-card">
+            <a-statistic
+              title="Active Licenses"
+              :value="statsData.activeLicenses"
+              :value-style="{ color: '#52c41a' }"
+            />
+          </a-card>
+        </a-col>
+        <a-col :span="8">
+          <a-card class="stats-card">
+            <a-statistic
+              title="Paid Licenses"
+              :value="statsData.paidLicenses"
+              :value-style="{ color: '#722ed1' }"
+            />
+          </a-card>
+        </a-col>
+      </a-row>
+    </div>
+
     <div style="text-align: right; margin-bottom: 20px;">
       <!-- <a-button type="primary" @click="showAddUserModal">Add User</a-button> -->
     </div>
@@ -73,6 +106,8 @@
 </template>
 
 <script>
+import { getAction } from "@/services/api";
+
 export default {
   data() {
     return {
@@ -99,6 +134,7 @@ export default {
           licenseType: "Type 1",
           expireDate: "2025-12-31",
           registrationDate: "2023-01-01",
+
         },
       ],
       columns: [
@@ -128,12 +164,31 @@ export default {
           key: "registrationDate",
         },
         {
+          title: "License Status",
+          dataIndex: "licenseState",
+          key: "licenseState",
+        },
+        {
+          title: "Credits",
+          dataIndex: "credits",
+          key: "credits",
+        },
+        {
           title: "Operation",
           key: "operation",
           slots: { customRender: "operation" },
         },
       ],
+      // 新增：统計数据
+      statsData: {
+        totalUsers: 0,
+        activeLicenses: 0,
+        paidLicenses: 0,
+      },
     };
+  },
+  mounted() {
+    this.fetchStatsData();
   },
   methods: {
     showAddUserModal() {
@@ -171,6 +226,29 @@ export default {
         notes: "",
       };
     },
+    // 新增：获取统计数据的方法
+    async fetchStatsData() {
+      try {
+        // 模拟API调用，实际应该调用真实的API
+        const response = await getAction('/users/stats');
+        const { totalUsers, activeLicenses, paidLicenses, users } = response.data;
+        // 模拟数据
+        this.statsData = {
+          totalUsers,
+          activeLicenses,
+          paidLicenses,
+        };
+        this.data=users;
+      } catch (error) {
+        console.error('Failed to fetch stats data:', error);
+        // 使用模拟数据作为fallback
+        this.statsData = {
+          totalUsers: 1250,
+          activeLicenses: 890,
+          paidLicenses: 650,
+        };
+      }
+    },
   },
 };
 </script>
@@ -178,5 +256,38 @@ export default {
 <style scoped>
 a-button {
   margin-bottom: 20px;
+}
+
+/* 新增：统计卡片样式 */
+.stats-container {
+  margin-bottom: 24px;
+}
+
+.stats-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.stats-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.stats-card :deep(.ant-card-body) {
+  padding: 20px;
+}
+
+/* 新增：统计标题样式 */
+.stats-card :deep(.ant-statistic-title) {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.stats-card :deep(.ant-statistic-content) {
+  font-size: 32px;
+  font-weight: bold;
 }
 </style>

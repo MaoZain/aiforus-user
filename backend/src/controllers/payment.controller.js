@@ -7,14 +7,15 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY); // 确保在 .env 文�
 
 // 定义产品类型及其价格
 const productCatalog = {
-  Gold: { name: "Gold Membership", price: 5000 }, // 价格以美分为单位
-  Silver: { name: "Silver Membership", price: 3000 },
-  Platinum: { name: "Platinum Membership", price: 1000 },
+  Gold: { name: "Gold Membership", price: 49900 }, // 价格以美分为单位
+  Silver: { name: "Silver Membership", price: 19900 },
+  Platinum: { name: "Platinum Membership", price: 99900 },
 };
 
 export const createCheckoutSession = asyncHandler(async (req, res) => {
   console.log("createCheckoutSession");
-  const { type, successUrl, cancelUrl, email } = req.body;
+  const { type, successUrl, cancelUrl, email, couponCode } = req.body;
+  console.log({ type, successUrl, cancelUrl, email, couponCode });
 
   // 验证 type 和 userId 是否存在并有效
   if (!type || !productCatalog[type]) {
@@ -49,6 +50,7 @@ export const createCheckoutSession = asyncHandler(async (req, res) => {
     metadata: {
       email, // 将用户 ID 存储到 metadata
       licenseType: type, // 将 license type 存储到 metadata
+      couponCode: couponCode || "", // 将优惠券代码存储到 metadata
     },
   });
 
@@ -68,8 +70,10 @@ export const verifySession = asyncHandler(async (req, res) => {
   console.log("payment session", session);
   const email = session.metadata.email;
   const licenseType = session.metadata.licenseType;
+  const couponCode = session.metadata.couponCode;
+  const product = productCatalog[licenseType];
   // 更新数据库中的 license type
-  const updateSuccess = await updateUserLicenseType(email, licenseType);
+  const updateSuccess = await updateUserLicenseType(email, licenseType, couponCode, product.price);
   if (!updateSuccess) {
     throw new AppError("Failed to update license type", 500, "UPDATE_FAILED");
   }
@@ -80,4 +84,44 @@ export const verifySession = asyncHandler(async (req, res) => {
   } else {
     res.success({ status: "pending", session }, "Payment is not completed yet");
   }
+});
+
+// 新增：创建捐款 Checkout Session（固定每次捐款 0.01 USD）
+export const createDonationSession = asyncHandler(async (req, res) => {
+  const { successUrl, cancelUrl, email } = req.body;
+
+  if (!email) {
+    throw new AppError("email is required", 400, "MISSING_EMAIL");
+  }
+
+  // 固定捐款金额 0.01 USD => 1 美分
+  const donationAmountCents = 50;
+
+  const lineItems = [
+    {
+      price_data: {
+        currency: "usd",
+        product_data: {
+          name: "Donation",
+          description: "Thank you for your support",
+        },
+        unit_amount: donationAmountCents,
+      },
+      quantity: 1,
+    },
+  ];
+
+  const session = await stripe.checkout.sessions.create({
+    payment_method_types: ["card"],
+    line_items: lineItems,
+    mode: "payment",
+    success_url: successUrl || (process.env.FRONTEND_URL ? `${process.env.FRONTEND_URL}/donation-success` : "http://localhost:3000/donation-success"),
+    cancel_url: cancelUrl || (process.env.FRONTEND_URL ? `${process.env.FRONTEND_URL}/donation-cancel` : "http://localhost:3000/donation-cancel"),
+    metadata: {
+      email,
+      donation: "true",
+    },
+  });
+
+  res.success({ sessionId: session.id, url: session.url }, "Donation session created successfully");
 });

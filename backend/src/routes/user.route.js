@@ -11,6 +11,8 @@ import {
   handleInviteRegistration,
   getUserPoints,
   getCouponHistoryByEmail,
+  transferPoints,
+  getStatistics
 } from "../controllers/user.controller.js";
 
 const router = express.Router();
@@ -175,5 +177,9 @@ router.post("/generateInviteLink/", generateInviteLink);
 router.post("/inviteRegister/", handleInviteRegistration);
 
 router.get("/couponHistory/:email", getCouponHistoryByEmail);
+
+router.post("/transferPoints/", transferPoints);
+
+router.get("/stats/", getStatistics);
 
 export default router;

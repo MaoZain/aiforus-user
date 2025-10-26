@@ -17,7 +17,7 @@ const __dirname = path.dirname(__filename);
 export const generateTokenWithRSA = async (payload) => {
   try {
     // 读取私钥文件
-    const privateKeyPath = path.join(__dirname, "../../keys/private.pem");
+    const privateKeyPath = path.join(__dirname, "../../keys/test/es256-private.pem");
 
     console.log("Private key path:", privateKeyPath);
     console.log(payload);
@@ -30,7 +30,7 @@ export const generateTokenWithRSA = async (payload) => {
 
     // 合并选项
     const jwtOptions = {
-      algorithm: "RS256",
+      algorithm: "ES256",
     };
 
     // 生成token

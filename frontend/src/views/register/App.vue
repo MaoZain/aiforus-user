@@ -56,6 +56,17 @@
             />
           </a-form-item>
 
+          <!-- <a-form-item
+            label="Coupon Code (Optional)"
+            name="coupon"
+          >
+            <a-input 
+              v-model:value="form.coupon" 
+              placeholder="Type your coupon code" 
+              size="large"
+            />
+          </a-form-item> -->
+
           <a-button type="primary" block size="large" class="register-btn" @click="handleRegister">
             Register
           </a-button>
@@ -94,6 +105,7 @@ const form = ref({
   email: "",
   password: "",
   confirm: "",
+  coupon: "",
 });
 
 // 自定义验证：确认密码

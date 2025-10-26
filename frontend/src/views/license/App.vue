@@ -6,13 +6,25 @@
           <template #title>
             <div class="desc-title-row">
               <span>License Info</span>
-              <a-button
-                :disabled="licenseState === 'suspended'"
-                type="primary"
-                class="upgrade-btn"
-                @click="showModal = true"
-                >Upgrade</a-button
-              >
+              <div class="title-actions">
+                <a-button
+                  :disabled="licenseState === 'suspended'"
+                  type="primary"
+                  class="upgrade-btn"
+                  @click="showModal = true"
+                  >Upgrade</a-button
+                >
+                <!-- 新增：捐款按钮 -->
+                <a-button
+                  :disabled="licenseState === 'suspended'"
+                  type="default"
+                  class="donate-btn"
+                  @click="handleDonate"
+                  :loading="donateLoading"
+                >
+                  Donate $0.50
+                </a-button>
+              </div>
             </div>
           </template>
           <a-descriptions-item label="License Type" :span="2">
@@ -83,7 +95,7 @@
         </a-empty>
       </template>
       <a-modal
-        v-model:open="showModal"
+        :open="showModal"
         title="Upgrade License"
         @ok="handleUpgrade"
         @cancel="showModal = false"
@@ -91,50 +103,35 @@
       >
         <div class="pricing-modal">
           <h2 class="pricing-title">Choose Your Pricing Plan</h2>
+
+          <div class="coupon-section">
+            <a-input
+              v-model:value="couponCode"
+              placeholder="Enter coupon code"
+              allow-clear
+              class="coupon-input"
+              size="large"
+            />
+          </div>
+          
           <div class="pricing-cards">
             <div
+              v-for="plan in plans"
+              :key="plan.type"
               class="pricing-card"
               :class="{
-                active: upgradeType === 'Trial',
-                'active-trial': upgradeType === 'Trial',
+                active: upgradeType === plan.type,
+                ['active-' + plan.type.toLowerCase()]: upgradeType === plan.type,
+                disabled: isPlanDisabled(plan.type),
               }"
-              @click="upgradeType = 'Trial'"
+              :aria-disabled="isPlanDisabled(plan.type)"
+              @click="selectPlan(plan.type)"
             >
-              <div class="plan-title">Trial</div>
-              <div class="plan-desc">Free access to basic features. Perfect for new users to try out the service.</div>
-            </div>
-            <div
-              class="pricing-card"
-              :class="{
-                active: upgradeType === 'Silver',
-                'active-silver': upgradeType === 'Silver',
-              }"
-              @click="upgradeType = 'Silver'"
-            >
-              <div class="plan-title">Silver</div>
-              <div class="plan-desc">Ideal for individuals and small teams. Enjoy standard support and features.</div>
-            </div>
-            <div
-              class="pricing-card"
-              :class="{
-                active: upgradeType === 'Gold',
-                'active-gold': upgradeType === 'Gold',
-              }"
-              @click="upgradeType = 'Gold'"
-            >
-              <div class="plan-title">Gold</div>
-              <div class="plan-desc">More resources and premium support for growing businesses.</div>
-            </div>
-            <div
-              class="pricing-card"
-              :class="{
-                active: upgradeType === 'Platinum',
-                'active-platinum': upgradeType === 'Platinum',
-              }"
-              @click="upgradeType = 'Platinum'"
-            >
-              <div class="plan-title">Platinum</div>
-              <div class="plan-desc">All advanced features and exclusive services for enterprises.</div>
+              <div class="plan-title">{{ plan.title }}</div>
+              <div class="plan-price">{{ plan.price }}</div>
+              <div class="plan-duration">{{ plan.duration }}</div>
+              <div class="plan-desc">{{ plan.desc }}</div>
+              <div v-if="isPlanDisabled(plan.type)" class="plan-disabled-hint">已高于该等级</div>
             </div>
           </div>
         </div>
@@ -144,7 +141,7 @@
 </template>
 
 <script setup>
-import { ref, computed, h } from "vue";
+import { ref, computed, h, watch } from "vue";
 import { useLicenseStore } from "@/store/license";
 import { useAuthStore } from "@/store/auth";
 import { postAction } from "@/services/api";
@@ -154,10 +151,48 @@ import { CopyOutlined, CheckOutlined } from "@ant-design/icons-vue";
 const licenseStore = useLicenseStore();
 const authStore = useAuthStore();
 
+const PLAN_METADATA = [
+  {
+    type: "Trial",
+    title: "Trial",
+    duration: "3 Months",
+    price: "$0",
+    desc: "Free access to core features—perfect for trying AiforUs for the first time.",
+  },
+  {
+    type: "Silver",
+    title: "Silver",
+    duration: "1 Year",
+    price: "$199",
+    desc: "Ideal for individuals and small teams with standard features and support.",
+  },
+  {
+    type: "Gold",
+    title: "Gold",
+    duration: "3 Years",
+    price: "$499",
+    desc: "More resources and premium support to help growing businesses scale.",
+  },
+  {
+    type: "Platinum",
+    title: "Platinum",
+    duration: "Forever",
+    price: "$999",
+    desc: "Enterprise-grade access to every advanced feature and exclusive services.",
+  },
+];
+
+const PLAN_ORDER = PLAN_METADATA.map((plan) => plan.type);
+const plans = PLAN_METADATA;
+
 const showModal = ref(false);
-const upgradeType = ref("Trial");
+const upgradeType = ref("");
 const updating = ref(false);
 const copyIcon = ref(h(CopyOutlined));
+const couponCode = ref("");
+
+// 新增：捐款状态
+const donateLoading = ref(false);
 
 const licenseType = computed(() => licenseStore.licenseType);
 const licenseStart = computed(() => licenseStore.licenseStart);
@@ -166,6 +201,37 @@ const licenseState = computed(() => licenseStore.licenseState);
 const licenseCode = computed(() => licenseStore.licenseCode);
 
 const loading = ref(false);
+
+const getPlanIndex = (type) => PLAN_ORDER.indexOf(type);
+
+const isPlanDisabled = (planType) => {
+  const current = licenseType.value;
+  if (!current) return false;
+  const currentIdx = getPlanIndex(current);
+  if (currentIdx === -1) return false;
+  const planIdx = getPlanIndex(planType);
+  if (planIdx === -1) return false;
+  return planIdx < currentIdx;
+};
+
+const selectPlan = (planType) => {
+  if (isPlanDisabled(planType)) return;
+  upgradeType.value = planType;
+};
+
+const setDefaultUpgradeType = () => {
+  const firstAvailable = PLAN_METADATA.find((plan) => !isPlanDisabled(plan.type));
+  upgradeType.value = firstAvailable ? firstAvailable.type : PLAN_METADATA[PLAN_METADATA.length - 1].type;
+};
+
+watch(licenseType, setDefaultUpgradeType, { immediate: true });
+
+// 当模态框关闭时清空优惠券代码
+watch(showModal, (open) => {
+  if (!open) {
+    couponCode.value = "";
+  }
+});
 
 // 截断显示的许可证代码
 const truncatedLicenseCode = computed(() => {
@@ -246,6 +312,14 @@ const updateLicenseCode = async () => {
 };
 
 async function handleUpgrade() {
+  if (!upgradeType.value) {
+    message.warning("Please select a plan to upgrade.");
+    return;
+  }
+  if(upgradeType.value === "Trial"){
+    message.info("Trial plan is free. No need to upgrade.");
+    return;
+  }
   try {
     // 显示加载状态
     const loadingKey = "upgradeLoading";
@@ -259,6 +333,13 @@ async function handleUpgrade() {
       successUrl: `${window.location.origin}/payment-success`,
       cancelUrl: `${window.location.origin}/payment-cancel`,
     };
+
+    // 如果有优惠券代码，则添加到参数中
+    if (couponCode.value && couponCode.value.trim()) {
+      params.couponCode = couponCode.value.trim();
+    }
+
+    console.log(params);
 
     // 对于付费版本，创建 Stripe 结账会话
     const response = await postAction("/payment/create-checkout-session", params);
@@ -280,6 +361,48 @@ async function handleUpgrade() {
     // });
   }
 }
+
+// 新增：处理捐款逻辑（每次固定 0.01）
+const handleDonate = async () => {
+	if (!authStore.useremail) {
+		message.error("User email not available");
+		return;
+	}
+	try {
+		const loadingKey = "donateLoading";
+		message.loading({ content: "Processing donation...", key: loadingKey, duration: 0 });
+		donateLoading.value = true;
+
+		const params = {
+			amount: 0.01,
+			email: authStore.useremail,
+			successUrl: `${window.location.origin}/donation-success`,
+			cancelUrl: `${window.location.origin}/donation-cancel`,
+		};
+
+		// 调用后端创建捐款会话（参照 handleUpgrade 的接口风格）
+		const response = await postAction("/payment/create-donation-session", params);
+
+		if (response && response.success && response.data && response.data.url) {
+			// 可选：存会话 id
+			if (response.data.sessionId) {
+				localStorage.setItem("stripeSessionId", response.data.sessionId);
+			}
+			// 跳转到托管的付款页面
+			window.location.href = response.data.url;
+		} else if (response && response.success) {
+			// 如果后端直接返回成功，则感谢捐款
+			message.success({ content: "Thank you for your donation!", key: loadingKey });
+		} else {
+			message.error({ content: response.message || "Failed to process donation", key: loadingKey });
+		}
+	} catch (error) {
+		console.error("Donation error:", error);
+		message.error("Donation processing failed. Please try again later.");
+	} finally {
+		donateLoading.value = false;
+	}
+};
 
 // 格式化日期函数
 const formatDate = (dateString) => {
@@ -417,6 +540,26 @@ const formatDate = (dateString) => {
   color: #222;
 }
 
+.coupon-section {
+  margin-bottom: 32px;
+  text-align: left;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.coupon-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.coupon-input {
+  width: 100%;
+}
+
 .pricing-cards {
   display: flex;
   justify-content: center;
@@ -426,7 +569,7 @@ const formatDate = (dateString) => {
 
 .pricing-card {
   width: 210px;
-  height: 260px;
+  height: 300px;
   padding: 32px 20px;
   border: 1.5px solid #eee;
   border-radius: 16px;
@@ -481,12 +624,43 @@ const formatDate = (dateString) => {
   color: #222;
 }
 
+.plan-price {
+  font-size: 28px;
+  font-weight: 700;
+  color: #101010;
+}
+
+.plan-duration {
+  font-size: 16px;
+  color: #555;
+  margin-top: 12px;
+}
+
 .plan-desc {
   font-size: 15px;
   color: #666;
   margin-top: 16px;
   text-align: center;
   line-height: 1.6;
+}
+
+.pricing-card.disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  box-shadow: none;
+  border-color: #d9d9d9;
+  background-color: #f5f5f5;
+}
+
+.pricing-card.disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.plan-disabled-hint {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #8c8c8c;
 }
 
 .active-link {
@@ -499,6 +673,27 @@ const formatDate = (dateString) => {
 
 .active-link:hover {
   color: #40a9ff;
+}
+
+/* 新增：捐款按钮样式，与 Upgrade 按钮协调 */
+.title-actions {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.donate-btn {
+	border-radius: 6px;
+	padding: 0 12px;
+	height: 36px;
+	color: #fa8c16;
+	border-color: #ffd591;
+	background: linear-gradient(180deg, #fff 0%, #fff 100%);
+	box-shadow: none;
+}
+
+.donate-btn:hover {
+	color: #ffa940;
 }
 
 /* 响应式设计 */

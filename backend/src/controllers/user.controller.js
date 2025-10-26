@@ -46,13 +46,19 @@ export const getLicenseByEmail = asyncHandler(async (req, res) => {
     throw new AppError("User not found", 404, "USER_NOT_FOUND");
   }
 
+  // 处理 license_token，删除 JWT header 部分
+  let processedLicenseCode = null;
+  if (userInfo.license_token) {
+    processedLicenseCode = userInfo.license_token.split('.').slice(1).join('.');
+  }
+
   // 返回license相关信息
   const license = {
     licenseType: userInfo.license_type || "trial",
     licenseStart: userInfo.license_start_date || null,
     licenseExpire: userInfo.license_expiration_date || null,
     licenseState: userInfo.license_state || null,
-    licenseCode: userInfo.license_token || null,
+    licenseCode: processedLicenseCode,
   };
 
   res.success(license, "license information fetched successfully");
@@ -104,28 +110,44 @@ export const updateLicenseCode = asyncHandler(async (req, res) => {
   if (!user) {
     throw new AppError("User not found", 404, "USER_NOT_FOUND");
   }
-  console.log(user);
+  // console.log(user);
   let expiration = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 默认30天试用期
   if (expiration > new Date(user.license_expiration_date).getTime()) {
     expiration = new Date(user.license_expiration_date); // 如果传入的许可过期时间更早，则使用它
   }
-  console.log(expiration);
+  console.log(expiration); // 2026-01-03
   expiration = new Date(user.license_expiration_date);
-  const tokenPayload = {
-    email: user.email,
-    password: user.password_hash, // 注意：这里使用的是密码哈希值，实际应用中请确保安全性
-    licenseStartDate: user.license_start_date,
-    licenseType: user.license_type,
-    licenseExpirationDate: expiration,
-    licenseState: user.license_state,
-    role: user.role || "user",
-    username: user.user_name,
-  };
+  // const tokenPayload = {
+  //   email: user.email,
+  //   // password: user.password_hash, // 注意：这里使用的是密码哈希值，实际应用中请确保安全性
+  //   licenseStartDate: user.license_start_date,
+  //   licenseType: user.license_type,
+  //   licenseExpirationDate: expiration,
+  //   licenseState: user.license_state,
+  //   // role: user.role || "user",
+  //   username: user.user_name,
+  // };
+  const typeDict = {
+    trial: "1",
+    silver: "2",
+    gold: "3",
+    platinum: "4"
+  }
+  const expirationShort = expiration.getFullYear().toString().slice(-2) + 
+                         (expiration.getMonth() + 1).toString().padStart(2, '0') + 
+                         expiration.getDate().toString().padStart(2, '0'); // 格式: 260125
+  const tokenPayload = expirationShort + "|" + user.user_name + "|" + typeDict[user.license_type]; // 260125|391052034@qq.com|platinum
+  
+  console.log(tokenPayload);
   //使用RSA私钥生成token
   const licenseToken = await generateTokenWithRSA(tokenPayload);
   console.log("Generated license token update code:", licenseToken);
   await pool.query("UPDATE users SET license_token = ? WHERE email = ?", [licenseToken, user.email]);
-  res.success(licenseToken, "License code updated successfully");
+  
+  // 删除JWT header部分 - 使用正确的方法
+  const tokenWithoutHeader = licenseToken.split('.').slice(1).join('.');
+  console.log("License token without header:", tokenWithoutHeader);
+  res.success(tokenWithoutHeader, "License code updated successfully");
 });
 
 export const verifyEmailToken = asyncHandler(async (req, res) => {
@@ -337,5 +359,95 @@ export const getCouponHistoryByEmail = asyncHandler(async (req, res) => {
     res.success(rows, "Coupon history fetched successfully");
   } catch (err) {
     throw new AppError("Failed to fetch coupon history", 500, "COUPON_HISTORY_FETCH_FAILED");
+  }
+});
+
+export const transferPoints = asyncHandler(async (req, res) => {
+  const { senderEmail, recipientEmail, amount } = req.body;
+  console.log("Transfer Points:", { senderEmail, recipientEmail, amount });
+  if (!senderEmail || !recipientEmail || !amount) {
+    throw new AppError("Sender email, recipient email and amount are required", 400, "MISSING_REQUIRED_FIELDS");
+  }
+  if (amount <= 0) {
+    throw new AppError("Transfer amount must be greater than zero", 400, "INVALID_AMOUNT");
+  }
+  if (senderEmail === recipientEmail) {
+    throw new AppError("Cannot transfer points to yourself", 400, "SAME_SENDER_RECIPIENT");
+  }
+
+  try {
+    // 检查发送者和接收者是否存在
+    const sender = await findUserByEmail(senderEmail);
+    const recipient = await findUserByEmail(recipientEmail);
+    if (!sender) {
+      throw new AppError("Sender not found", 404, "SENDER_NOT_FOUND");
+    }
+    if (!recipient) {
+      throw new AppError("Recipient not found", 404, "RECIPIENT_NOT_FOUND");
+    }
+
+    // 检查发送者积分是否足够
+    const senderCredits = sender.credits || 0;
+    if (senderCredits < amount) {
+      throw new AppError("Insufficient points", 400, "INSUFFICIENT_POINTS");
+    }
+
+    // 执行积分转账
+    await pool.query("UPDATE users SET credits = credits - ? WHERE email = ?", [amount, senderEmail]);
+    await pool.query("UPDATE users SET credits = COALESCE(credits, 0) + ? WHERE email = ?", [amount, recipientEmail]);
+
+    // 记录转账历史
+    await pool.query(
+      "INSERT INTO coupon_history (inviterEmail, inviteeEmail, state, memo) VALUES (?, ?, ?,?)",
+      [senderEmail, recipientEmail, "active", `Transferred ${amount} points`]
+    );
+
+    res.success(null, `Successfully transferred ${amount} points to ${recipientEmail}`);
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+    console.error("Transfer points error:", error);
+    throw new AppError("Failed to transfer points", 500, "POINTS_TRANSFER_FAILED");
+  }
+});
+
+export const getStatistics = asyncHandler(async (req, res) => {
+  try {
+    // 获取用户总数
+    const [totalUsersRows] = await pool.query("SELECT COUNT(*) AS totalUsers FROM users");
+    const totalUsers = totalUsersRows[0]?.totalUsers || 0;
+
+    // 获取活跃许可证数量 (license_state = 'active')
+    const [activeLicensesRows] = await pool.query("SELECT COUNT(*) AS activeLicenses FROM users WHERE license_state = 'active'");
+    const activeLicenses = activeLicensesRows[0]?.activeLicenses || 0;
+
+    // 获取付费许可证数量 (license_type != 'Trial')
+    const [paidLicensesRows] = await pool.query("SELECT COUNT(*) AS paidLicenses FROM users WHERE license_type != 'Trial' AND license_type IS NOT NULL");
+    const paidLicenses = paidLicensesRows[0]?.paidLicenses || 0;
+
+    // 获取所有用户数据
+    const [usersRows] = await pool.query(`
+      SELECT 
+        user_name as username,
+        email,
+        license_type as licenseType,
+        license_expiration_date as expireDate,
+        registration_date as registrationDate,
+        license_state as licenseState,
+        credits
+      FROM users 
+      ORDER BY registration_date DESC
+    `);
+
+    res.success({ 
+      totalUsers, 
+      activeLicenses, 
+      paidLicenses,
+      users: usersRows || []
+    }, "Statistics and user data fetched successfully");
+  } catch (error) {
+    console.error("Failed to fetch statistics:", error);
+    throw new AppError("Failed to fetch statistics", 500, "STATS_FETCH_FAILED");
   }
 });

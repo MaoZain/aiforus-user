@@ -1,12 +1,58 @@
 <template>
   <div class="points-page">
-    <!-- Your Points -->
-    <a-card title="Your Points" class="points-card">
-      <a-descriptions bordered>
-        <a-descriptions-item label="Total Points">
+    <!-- Your Credits -->
+    <a-card title="Coupon"  class="points-card" >
+      <a-descriptions bordered :column="1">
+        <a-descriptions-item label="Your Coupon Code">
+          <span class="total-points">{{ couponCode }}</span>
+        </a-descriptions-item>
+        <a-descriptions-item label="Total Credits">
           <span class="total-points">{{ totalPoints }}</span>
         </a-descriptions-item>
       </a-descriptions>
+    </a-card>
+
+    <!-- 新增：积分转让功能 -->
+    <a-card title="Transfer Credits" class="transfer-card">
+      <a-form layout="vertical" @submit.prevent="handleTransfer">
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item label="Recipient Email" required>
+              <a-input
+                v-model:value="transferEmail"
+                placeholder="Enter recipient's email"
+                type="email"
+              />
+            </a-form-item>
+          </a-col>
+          <a-col :span="8">
+            <a-form-item label="Amount" required>
+              <a-input-number
+                v-model:value="transferAmount"
+                :min="1"
+                :max="totalPoints"
+                placeholder="Enter amount"
+                style="width: 100%"
+              />
+            </a-form-item>
+          </a-col>
+          <a-col :span="4">
+            <a-form-item label=" ">
+              <a-button type="primary" @click="handleTransfer" :loading="transferLoading">
+                Transfer
+              </a-button>
+            </a-form-item>
+          </a-col>
+        </a-row>
+      </a-form>
+      
+      <a-alert
+        message="Transfer Notice"
+        description="Please ensure the recipient email is correct. Transfers cannot be reversed."
+        type="info"
+        show-icon
+        style="margin-top: 16px"
+      />
     </a-card>
 
     <!-- Invite Others -->
@@ -37,6 +83,7 @@
       </div>
     </a-card>
 
+
     <!-- 新增：独立 Invitation History 卡片 -->
     <a-card title="Invitation History" class="history-card">
       <a-table
@@ -60,6 +107,7 @@ import { useAuthStore } from "@/store/auth";
 
 const authStore = useAuthStore();
 const totalPoints = ref(0); // Example total points
+const couponCode = ref(null); // User's coupon code, if any
 const inviteEmail = ref(""); // Input email
 const inviteLink = ref(""); // 存储生成的邀请链接
 const showInviteLink = ref(false); // 控制是否显示邀请链接
@@ -77,6 +125,21 @@ const inviteColumns = [
   { title: "Memo", dataIndex: "memo", key: "memo" },
 ];
 
+// 新增：积分转让相关数据
+const transferEmail = ref("");
+const transferAmount = ref(null);
+const transferLoading = ref(false);
+const transferRecords = ref([]);
+
+// 积分转让历史表格列
+const transferColumns = [
+  { title: "Type", dataIndex: "type", key: "type" },
+  { title: "Recipient/Sender", dataIndex: "otherParty", key: "otherParty" },
+  { title: "Amount", dataIndex: "amount", key: "amount" },
+  { title: "Date", dataIndex: "date", key: "date" },
+  { title: "Status", dataIndex: "status", key: "status" },
+];
+
 // Query user's total points
 async function fetchTotalPoints() {
   try {
@@ -89,6 +152,7 @@ async function fetchTotalPoints() {
     const result = await getAction(`/users/points/${authStore.useremail}`);
     if (result && result.data) {
       totalPoints.value = result.data.totalPoints || 0;
+      couponCode.value = result.data.couponCode || null;
     }
   } catch (error) {
     console.error("Failed to fetch total points:", error);
@@ -153,6 +217,58 @@ async function handleInvite() {
   // inviteEmail.value = '' // Clear input field
 }
 
+// 新增：积分转让处理逻辑
+async function handleTransfer() {
+  if (!transferEmail.value) {
+    message.error("Please enter recipient's email address");
+    return;
+  }
+
+  if (!transferAmount.value || transferAmount.value <= 0) {
+    message.error("Please enter a valid transfer amount");
+    return;
+  }
+
+  if (transferAmount.value > totalPoints.value) {
+    message.error("Transfer amount cannot exceed your current credits");
+    return;
+  }
+
+  if (transferEmail.value === authStore.useremail) {
+    message.error("Cannot transfer credits to yourself");
+    return;
+  }
+  const params = {
+    senderEmail: authStore.useremail,
+    recipientEmail: transferEmail.value,
+    amount: transferAmount.value,
+  };
+  console.log("Transfer parameters:", params);
+  transferLoading.value = true;
+  try {
+    const result = await postAction("/users/transferPoints", params);
+    console.log("Transfer result:", result);
+
+    if (result && result.success) {
+      message.success(`Successfully transferred ${transferAmount.value} credits to ${transferEmail.value}`);
+      // Refresh total points
+      await fetchTotalPoints();
+      await fetchHistoricalInvites(); // Refresh transfer history
+      // Clear input fields
+      transferEmail.value = "";
+      transferAmount.value = null;
+    } else {
+      const errorMsg = (result && result.data && result.data.message) || "Transfer failed";
+      message.error(errorMsg);
+    }
+  } catch (error) {
+    console.error("Error during transfer:", error);
+    message.error("Transfer failed due to an error");
+  } finally {
+    transferLoading.value = false;
+  }
+}
+
 // 复制邀请链接
 async function copyInviteLink() {
   try {
@@ -192,7 +308,9 @@ async function copyInviteLink() {
 
 .points-card,
 .invite-card,
-.history-card {
+.history-card,
+.transfer-card,
+.transfer-history-card {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }

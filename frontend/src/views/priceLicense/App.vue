@@ -23,17 +23,17 @@ const columns = [
   { title: "Updates", dataIndex: "updates", key: "updates" },
   { title: "License Expiration", dataIndex: "expiration", key: "expiration" },
   { title: "Technical Support", dataIndex: "support", key: "support" },
-  { title: "Online Version", dataIndex: "online", key: "online" },
+  { title: "Credits for extension or API", dataIndex: "online", key: "online" },
   { title: "Price", dataIndex: "price", key: "price" },
 ];
 
 const data = [
   {
     version: "Trial",
-    updates: "1 month",
-    expiration: "Expires after 1 year",
+    updates: "3 month",
+    expiration: "Expires after 3 months",
     support: "Bug reports only",
-    online: "optional at $10 per month or $99 per year",
+    online: "0 credit",
     price: "$0",
   },
   {
@@ -41,7 +41,7 @@ const data = [
     updates: "1 Year",
     expiration: "Expires after 1 year",
     support: "Bug reports only",
-    online: "optional at $10 per month or $99 per year",
+    online: "30 credits",
     price: "$199",
   },
   {
@@ -49,15 +49,15 @@ const data = [
     updates: "3 Years",
     expiration: "Expires after 3 years",
     support: "Bug reports; may fix bugs",
-    online: "optional at $10 per month or $99 per year",
+    online: "100 credits",
     price: "$499",
   },
   {
     version: "Platinum",
-    updates: "5 Years",
+    updates: "Forever",
     expiration: "Never expires",
     support: "Email support; may fix bugs",
-    online: "1-year free trial",
+    online: "200 credits",
     price: "$999",
   },
 ];
