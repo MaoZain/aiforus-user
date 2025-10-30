@@ -1,9 +1,16 @@
 import Stripe from "stripe";
+import HttpsProxyAgent from "https-proxy-agent";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import { AppError } from "../utils/AppError.js";
-import { updateUserLicenseType } from "../models/user.model.js"; // 假设您有用户模型
+import { updateUserLicenseType } from "../models/user.model.js";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY); // 确保在 .env 文件中配置 STRIPE_SECRET_KEY
+const agent = process.env.HTTPS_PROXY
+  ? new HttpsProxyAgent(process.env.HTTPS_PROXY)
+  : undefined;
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  httpAgent: agent,
+});
 
 // 定义产品类型及其价格
 const productCatalog = {
