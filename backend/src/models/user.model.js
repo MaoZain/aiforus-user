@@ -48,19 +48,30 @@ export const updateUserLicenseType = async (email, licenseType, couponCode, pric
       
       if (couponRows.length > 0) {
         const inviterEmail = couponRows[0].email;
-        
-        // 更新邀请人的 credits
-        const [updateCredits] = await pool.query(
-          "UPDATE users SET credits = COALESCE(credits, 0) + ? WHERE couponCode = ?",
-          [price / 100, couponCode]
-        );
+        let creditsToAdd = 0;
+        // 根据捐款金额计算应增加的 credits
+        if (licenseType === "gold") { // 捐款 50 USD 及以上
+          creditsToAdd = 30;
+        } else if (licenseType === "silver") { // 捐款 20 USD 及以上
+          creditsToAdd = 100;
+        } else if (licenseType === "platinum") { // 捐款 10 USD 及以上
+          creditsToAdd = 200;
+        }
+
+        if (creditsToAdd > 0) {
+          // 更新邀请人的 credits
+          const [updateCredits] = await pool.query(
+            "UPDATE users SET credits = COALESCE(credits, 0) + ? WHERE email = ?",
+            [creditsToAdd, inviterEmail]
+          );
+        }
         
         // 插入 coupon_history 记录
         await pool.query("INSERT INTO coupon_history (inviterEmail, inviteeEmail, state, memo) VALUES (?, ?, ?, ?)", [
           inviterEmail,
           email,
           "active",
-          `Added credits ${price / 100}`,
+          `Added credits ${creditsToAdd}`,
         ]);
       }
     }
