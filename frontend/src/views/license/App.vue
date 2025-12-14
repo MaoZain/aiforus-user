@@ -14,15 +14,14 @@
                   @click="showModal = true"
                   >Upgrade</a-button
                 >
-                <!-- 新增：捐款按钮 -->
+                <!-- 修改：捐款按钮 -->
                 <a-button
                   :disabled="licenseState === 'suspended'"
                   type="default"
                   class="donate-btn"
-                  @click="handleDonate"
-                  :loading="donateLoading"
+                  @click="openDonateModal"
                 >
-                  Donate $0.50
+                  Donate
                 </a-button>
               </div>
             </div>
@@ -136,6 +135,30 @@
           </div>
         </div>
       </a-modal>
+
+      <!-- 新增：捐款弹窗 -->
+      <a-modal
+        :open="showDonateModal"
+        title="Support Us"
+        @ok="handleDonate"
+        @cancel="showDonateModal = false"
+        :confirmLoading="donateLoading"
+      >
+        <div class="donate-modal-content" style="padding: 20px 0;">
+          <p style="margin-bottom: 10px;">Please enter the donation amount (USD):</p>
+          <a-input-number
+            v-model:value="donateAmount"
+            :min="0.5"
+            :step="1"
+            prefix="$"
+            style="width: 100%"
+            placeholder="Minimum $0.50"
+          />
+          <div v-if="donateAmount && donateAmount < 0.5" style="color: #ff4d4f; margin-top: 5px; font-size: 12px;">
+            Minimum donation amount is $0.50
+          </div>
+        </div>
+      </a-modal>
     </div>
   </a-spin>
 </template>
@@ -192,6 +215,8 @@ const copyIcon = ref(h(CopyOutlined));
 const couponCode = ref("");
 
 // 新增：捐款状态
+const showDonateModal = ref(false);
+const donateAmount = ref(5);
 const donateLoading = ref(false);
 
 const licenseType = computed(() => licenseStore.licenseType);
@@ -362,19 +387,31 @@ async function handleUpgrade() {
   }
 }
 
-// 新增：处理捐款逻辑（每次固定 0.01）
+// 打开捐款弹窗
+const openDonateModal = () => {
+  donateAmount.value = 5; // 重置为默认建议金额
+  showDonateModal.value = true;
+};
+
+// 修改：处理捐款逻辑
 const handleDonate = async () => {
 	if (!authStore.useremail) {
 		message.error("User email not available");
 		return;
 	}
+
+  if (!donateAmount.value || donateAmount.value < 0.5) {
+    message.warning("Minimum donation amount is $0.50");
+    return;
+  }
+
 	try {
 		const loadingKey = "donateLoading";
 		message.loading({ content: "Processing donation...", key: loadingKey, duration: 0 });
 		donateLoading.value = true;
 
 		const params = {
-			amount: 0.01,
+			amount: donateAmount.value,
 			email: authStore.useremail,
 			successUrl: `${window.location.origin}/donation-success`,
 			cancelUrl: `${window.location.origin}/donation-cancel`,
@@ -393,6 +430,7 @@ const handleDonate = async () => {
 		} else if (response && response.success) {
 			// 如果后端直接返回成功，则感谢捐款
 			message.success({ content: "Thank you for your donation!", key: loadingKey });
+      showDonateModal.value = false;
 		} else {
 			message.error({ content: response.message || "Failed to process donation", key: loadingKey });
 		}

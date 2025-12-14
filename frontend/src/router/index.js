@@ -5,6 +5,8 @@ import Register from "@/views/register/App.vue";
 import DefaultLayout from "@/layout/Default.vue";
 import PaymentSuccess from "@/views/payment/PaymentSuccess.vue";
 import PaymentCancel from "@/views/payment/PaymentCancel.vue";
+import DonationSuccess from "@/views/payment/DonationSuccess.vue";
+import DonationCancel from "@/views/payment/DonationCancel.vue";
 
 const routes = [
   { path: "/verify-email", name: "VerifyEmail", component: () => import("@/views/components/verifyEmail.vue") }, // 新增验证邮箱路由
@@ -78,6 +80,16 @@ const routes = [
     path: "/payment-cancel",
     name: "PaymentCancel",
     component: PaymentCancel,
+  },
+  {
+    path: "/donation-success",
+    name: "DonationSuccess",
+    component: DonationSuccess,
+  },
+  {
+    path: "/donation-cancel",
+    name: "DonationCancel",
+    component: DonationCancel,
   },
 ];
 

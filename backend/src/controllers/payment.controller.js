@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import HttpsProxyAgent from "https-proxy-agent";
+import {HttpsProxyAgent} from "https-proxy-agent";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import { AppError } from "../utils/AppError.js";
 import { updateUserLicenseType } from "../models/user.model.js";
