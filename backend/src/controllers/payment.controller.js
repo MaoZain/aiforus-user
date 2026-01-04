@@ -14,9 +14,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 
 // 定义产品类型及其价格
 const productCatalog = {
-  Gold: { name: "Gold Membership", price: 49900 }, // 价格以美分为单位
-  Silver: { name: "Silver Membership", price: 19900 },
-  Platinum: { name: "Platinum Membership", price: 99900 },
+  Gold: { name: "Gold Membership", price: 10 }, // 价格以美分为单位
+  Silver: { name: "Silver Membership", price: 10 },
+  Platinum: { name: "Platinum Membership", price: 10 },
 };
 
 export const createCheckoutSession = asyncHandler(async (req, res) => {
