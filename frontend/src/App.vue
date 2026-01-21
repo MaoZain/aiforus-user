@@ -3,12 +3,13 @@
   <router-view />
 </template>
 <script setup>
-import Header from '@/components/Header.vue'
+import Header from "@/components/Header.vue";
 import { useRouter } from "vue-router";
+import { onMounted } from "vue";
 import { message } from "ant-design-vue";
 import { useAuthStore } from "@/store/auth";
 import { postAction } from "@/services/api";
-import {useLicenseStore} from "@/store/license";
+import { useLicenseStore } from "@/store/license";
 
 const licenseStore = useLicenseStore();
 
@@ -18,18 +19,18 @@ const authStore = useAuthStore();
 // 自动登录逻辑 SSO
 const autoLogin = async () => {
   const token = localStorage.getItem("authToken");
+  console.log(token);
   if (token) {
     try {
       // 验证 token 的有效性
       const response = await postAction("/auth/validate-token", { token });
-
       if (response.success) {
         // message.success("SSO Login successful! Redirecting to dashboard...");
-        const {token, role, username, email} = response.data;
+        const { token, role, username, email } = response.data;
         authStore.login(response.data);
         licenseStore.getLicense(response.data.email);
         console.log(router);
-        if(router.currentRoute.value.includes("verify-email")) {
+        if (router.currentRoute.value.includes("verify-email")) {
           return; // 如果当前在验证邮箱页面，直接返回
         }
         if (role === "admin") {
@@ -38,20 +39,30 @@ const autoLogin = async () => {
           router.push("/dashboard");
         }
       } else {
+        authStore.logout(); // 调用退出登录逻辑
+        router.push("/home"); // 跳转到首页
+        localStorage.removeItem("authToken"); // 清除无效的 token
         throw new Error("Invalid token");
       }
     } catch (err) {
+      authStore.logout(); // 调用退出登录逻辑
+      router.push("/home"); // 跳转到首页
       console.log("SSO Login failed", err);
       localStorage.removeItem("authToken"); // 清除无效的 token
     }
+  } else {
+    authStore.logout(); // 调用退出登录逻辑
+    router.push("/home"); // 跳转到首页
   }
 };
-
+// autoLogin();
 // 页面加载时检查 SSO
-autoLogin();
+onMounted(() => {
+  autoLogin();
+});
 </script>
 <style scoped>
-.header { 
+.header {
   height: 64px;
   box-shadow: 0 2px 8px #f0f1f2;
   z-index: 10;
