@@ -4,6 +4,7 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [vue()],
+  base: '/',
   // assetsInclude: ['**/*.PNG'],
   resolve: {
     alias: {
@@ -32,7 +33,6 @@ export default defineConfig({
       }
     }
   },
-  base: '/', // 确保资源路径正确
   build: {
     outDir: 'dist' // 输出目录
   },
