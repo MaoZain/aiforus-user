@@ -94,14 +94,14 @@ export const verifySession = asyncHandler(async (req, res) => {
 
 // 新增：创建捐款 Checkout Session（固定每次捐款 0.01 USD）
 export const createDonationSession = asyncHandler(async (req, res) => {
-  const { successUrl, cancelUrl, email } = req.body;
+  const { successUrl, cancelUrl, email, amount } = req.body;
 
   if (!email) {
     throw new AppError("email is required", 400, "MISSING_EMAIL");
   }
 
   // 固定捐款金额 0.01 USD => 1 美分
-  const donationAmountCents = 50;
+  const donationAmountCents = amount;
 
   const lineItems = [
     {
