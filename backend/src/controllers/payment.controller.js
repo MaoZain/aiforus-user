@@ -101,7 +101,7 @@ export const createDonationSession = asyncHandler(async (req, res) => {
   }
 
   // 固定捐款金额 0.01 USD => 1 美分
-  const donationAmountCents = amount;
+  const donationAmountCents = amount * 100;
 
   const lineItems = [
     {
